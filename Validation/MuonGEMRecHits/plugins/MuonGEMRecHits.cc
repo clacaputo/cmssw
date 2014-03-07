@@ -1,9 +1,9 @@
 // -*- C++ -*-
 //
-// Package:    RecHitAnalyzer
-// Class:      RecHitAnalyzer
+// Package:    MuonGEMRecHits
+// Class:      MuonGEMRecHits
 // 
-/**\class RecHitAnalyzer RecHitAnalyzer.cc GEMCode/RecHitAnalyzer/plugins/RecHitAnalyzer.cc
+/**\class MuonGEMRecHits MuonGEMRecHits.cc 
 
  Description: [one line class summary]
 
@@ -100,10 +100,10 @@ using namespace edm;
 // class declaration
 //
 
-class RecHitAnalyzer : public edm::EDAnalyzer {
+class MuonGEMRecHits : public edm::EDAnalyzer {
    public:
-      explicit RecHitAnalyzer(const edm::ParameterSet&);
-      ~RecHitAnalyzer();
+      explicit MuonGEMRecHits(const edm::ParameterSet&);
+      ~MuonGEMRecHits();
     
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
     
@@ -165,7 +165,7 @@ class RecHitAnalyzer : public edm::EDAnalyzer {
 //
 // constructors and destructor
 //
-RecHitAnalyzer::RecHitAnalyzer(const edm::ParameterSet& iConfig):
+MuonGEMRecHits::MuonGEMRecHits(const edm::ParameterSet& iConfig):
 debug_(iConfig.getUntrackedParameter<bool>("debug")),
 gemRecHitInput_(iConfig.getUntrackedParameter<edm::InputTag>("gemRecHitInput")),
 gemSimHitInput_(iConfig.getUntrackedParameter<edm::InputTag>("gemSimHitInput")),
@@ -183,7 +183,7 @@ EffRootFileName_(iConfig.getUntrackedParameter<std::string>("EffRootFileName"))
 }
 
 
-RecHitAnalyzer::~RecHitAnalyzer()
+MuonGEMRecHits::~MuonGEMRecHits()
 {
    // do anything here that needs to be done at desctruction time
    // (e.g. close files, deallocate resources etc.)
@@ -192,7 +192,7 @@ RecHitAnalyzer::~RecHitAnalyzer()
 
 
 //RecHit Matching
-bool RecHitAnalyzer::isGEMRecHitMatched(MyGEMRecHit gem_recHit_, MyGEMSimHit gem_sh)
+bool MuonGEMRecHits::isGEMRecHitMatched(MyGEMRecHit gem_recHit_, MyGEMSimHit gem_sh)
 {
     
     Int_t gem_region = gem_recHit_.region;
@@ -235,7 +235,7 @@ bool RecHitAnalyzer::isGEMRecHitMatched(MyGEMRecHit gem_recHit_, MyGEMSimHit gem
 
 // ------------ method called for each event  ------------
 void
-RecHitAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+MuonGEMRecHits::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
     using namespace edm;
  
@@ -254,17 +254,18 @@ RecHitAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         trackType.push_back(t.type());
         trackIds.push_back(t.trackId());
         
+        track_.trkId = t.trackId();
+        track_.pt = t.momentum().pt();
+        track_.phi = t.momentum().phi();
+        track_.eta = t.momentum().eta();
+        
     }
-    //------
-//    iEvent.getByLabel(edm::InputTag("g4SimHits","MuonGEMHits"), GEMHits);
-//    iEvent.getByLabel(edm::InputTag("gemRecHits"), gemRecHits_);
    
     for (edm::PSimHitContainer::const_iterator itHit = GEMHits->begin(); itHit!=GEMHits->end(); ++itHit) {
-        
-        //const GEMDetId id(itHit->detUnitId());
   
         if(abs(itHit->particleType()) != 13) continue;
         if(std::find(trackIds.begin(), trackIds.end(), itHit->trackId()) == trackIds.end()) continue;
+        
         
         gem_sh.eventNumber = iEvent.id().event();
         gem_sh.detUnitId = itHit->detUnitId();
@@ -386,10 +387,10 @@ RecHitAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                 if(gem_recHit_.station==2 && gem_recHit_.region==1 && gem_recHit_.layer==2) meCollection["recHitPullX_rp1_st2_l2"]->Fill(gem_recHit_.pull);
                 
                 //Station 3
-                if(gem_recHit_.station==3 && gem_recHit_.region==-1 && gem_recHit_.layer==1) meCollection["recHitPullX_rm1_st2_l1"]->Fill(gem_recHit_.pull);
-                if(gem_recHit_.station==3 && gem_recHit_.region==-1 && gem_recHit_.layer==2) meCollection["recHitPullX_rm1_st2_l2"]->Fill(gem_recHit_.pull);
-                if(gem_recHit_.station==3 && gem_recHit_.region==1 && gem_recHit_.layer==1) meCollection["recHitPullX_rp1_st2_l1"]->Fill(gem_recHit_.pull);
-                if(gem_recHit_.station==3 && gem_recHit_.region==1 && gem_recHit_.layer==2) meCollection["recHitPullX_rp1_st2_l2"]->Fill(gem_recHit_.pull);
+                if(gem_recHit_.station==3 && gem_recHit_.region==-1 && gem_recHit_.layer==1) meCollection["recHitPullX_rm1_st3_l1"]->Fill(gem_recHit_.pull);
+                if(gem_recHit_.station==3 && gem_recHit_.region==-1 && gem_recHit_.layer==2) meCollection["recHitPullX_rm1_st3_l2"]->Fill(gem_recHit_.pull);
+                if(gem_recHit_.station==3 && gem_recHit_.region==1 && gem_recHit_.layer==1) meCollection["recHitPullX_rp1_st3_l1"]->Fill(gem_recHit_.pull);
+                if(gem_recHit_.station==3 && gem_recHit_.region==1 && gem_recHit_.layer==2) meCollection["recHitPullX_rp1_st3_l2"]->Fill(gem_recHit_.pull);
                 
         /*---------------------DeltaPhi-------------------------------*/
                 double deltaPhi = gem_recHit_.globalPhi-gem_sh.globalPhi;
@@ -488,7 +489,7 @@ RecHitAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 }
     
 
-bool RecHitAnalyzer::isSimTrackGood(const SimTrack &t)
+bool MuonGEMRecHits::isSimTrackGood(const SimTrack &t)
 {
     // SimTrack selection
     if (t.noVertex()) return false;
@@ -504,9 +505,9 @@ bool RecHitAnalyzer::isSimTrackGood(const SimTrack &t)
     return true;
 }
 
-void RecHitAnalyzer::bookingME(const GEMGeometry* gem_geometry_){
-//    std::cout<<"Print ============================>     "<<gem_geometry_->regions().size()<<std::endl;//[0]->stations()[0]->superChambers()[0]->chambers()[0]->etaPartitions()[0]->specs()->parameters()[3]<<std::endl; 
-//    std::cout<<"Print ============================>     "<<gem_geometry_->regions()[0]->stations().size()<<std::endl;	
+void MuonGEMRecHits::bookingME(const GEMGeometry* gem_geometry_){
+    std::cout<<"Print ============================>     "<<gem_geometry_->regions().size()<<std::endl;//[0]->stations()[0]->superChambers()[0]->chambers()[0]->etaPartitions()[0]->specs()->parameters()[3]<<std::endl; 
+    std::cout<<"Print ============================>     "<<gem_geometry_->regions()[0]->stations().size()<<std::endl;	
     int num_region=gem_geometry_->regions().size();
     int num_station=gem_geometry_->regions()[0]->stations().size();
     float nStrips=0;
@@ -514,6 +515,10 @@ void RecHitAnalyzer::bookingME(const GEMGeometry* gem_geometry_){
     std::string region[2] ={"m1", "p1"};
     std::string station[3]={ "_st1", "_st2", "_st3" };
 
+    //---------------------------------//
+    meCollection["denominatore_eta"] = dbe->book1D("denominatore_eta","Tracks matched SimHit",30,-3,3);
+    //--------------------------------//
+    
     meCollection["clsDistribution"] = dbe->book1D("clsDistribution","ClusterSizeDistribution",11,-0.5,10.5);
 
     meCollection["bxDistribution"] = dbe->book1D("bxDistribution","BunchCrossingDistribution",11,-5.5,5.5);
@@ -565,12 +570,12 @@ void RecHitAnalyzer::bookingME(const GEMGeometry* gem_geometry_){
     }
 }
 // ------------ method called once each job just before starting event loop  ------------
-void RecHitAnalyzer::beginJob(){
+void MuonGEMRecHits::beginJob(){
     
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
-void RecHitAnalyzer::endJob(){
+void MuonGEMRecHits::endJob(){
     
     dbe = 0;
     
@@ -579,14 +584,14 @@ void RecHitAnalyzer::endJob(){
 // ------------ method called when starting to processes a run  ------------
 
 void 
-RecHitAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
+MuonGEMRecHits::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
 {
    try {
     iSetup.get<MuonGeometryRecord>().get(gem_geom_);
     gem_geometry_ = &*gem_geom_;
     } catch (edm::eventsetup::NoProxyException<GEMGeometry>& e) {
         hasGEMGeometry_ = false;
-        edm::LogWarning("GEMRecHitAnalyzer") << "+++ Info: GEM geometry is unavailable. +++\n";
+        edm::LogWarning("MuonGEMRecHits") << "+++ Info: GEM geometry is unavailable. +++\n";
     }
     
     if(hasGEMGeometry_) {
@@ -599,7 +604,7 @@ RecHitAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
 // ------------ method called when ending the processing of a run  ------------
 
 void 
-RecHitAnalyzer::endRun(edm::Run const&, edm::EventSetup const&)
+MuonGEMRecHits::endRun(edm::Run const&, edm::EventSetup const&)
 {
     
     if (EffSaveRootFile_) dbe->save(EffRootFileName_);
@@ -609,7 +614,7 @@ RecHitAnalyzer::endRun(edm::Run const&, edm::EventSetup const&)
 // ------------ method called when starting to processes a luminosity block  ------------
 /*
 void 
-RecHitAnalyzer::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
+MuonGEMRecHits::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
 {
 }
 */
@@ -617,14 +622,14 @@ RecHitAnalyzer::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetu
 // ------------ method called when ending the processing of a luminosity block  ------------
 /*
 void 
-RecHitAnalyzer::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
+MuonGEMRecHits::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
 {
 }
 */
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void
-RecHitAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+MuonGEMRecHits::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   //The following says we do not know what parameters are allowed so do no validation
   // Please change this to state exactly what you do use, even if it is no parameters
   edm::ParameterSetDescription desc;
@@ -633,4 +638,4 @@ RecHitAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
 }
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(RecHitAnalyzer);
+DEFINE_FWK_MODULE(MuonGEMRecHits);
