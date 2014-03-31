@@ -19,6 +19,8 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load("DQMServices.Components.MEtoEDMConverter_cfi")
 process.load("DQMServices.Core.DQM_cfg")
 
+process.load("Validation.MuonGEMRecHits.MuonGEMRecHits_cfi")
+
 ## GEM geometry customization
 #mynum = process.XMLIdealGeometryESSource.geomXMLFiles.index('Geometry/MuonCommonData/data/v4/gemf.xml')
 #process.XMLIdealGeometryESSource.geomXMLFiles.remove('Geometry/MuonCommonData/data/v4/gemf.xml')
@@ -44,7 +46,7 @@ process.source = cms.Source("PoolSource",
 
 process.FILE = cms.OutputModule("PoolOutputModule", fileName = cms.untracked.string('histo.root') )
 
-process.load("Validation.MuonGEMRecHits.MuonGEMRecHits_cfi")
+
 #process.RecHitAnalyzer.EffRootFileName="prova2.root"
 process.p = cms.Path(process.gemRecHitsValidation)
 #process.outpath = cms.EndPath(process.FILE)

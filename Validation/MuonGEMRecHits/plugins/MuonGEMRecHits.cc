@@ -89,10 +89,15 @@
 #include "TrackingTools/Records/interface/TrackingComponentsRecord.h"
 
 //Structures used for filling ME
-#include "Validation/MuonGEMRecHits/src/SimRecStructures.h"
+#include "Validation/MuonGEMRecHits/interface/SimRecStructures.h"
+//Tracks Matching
+#include "Validation/MuonGEMRecHits/interface/SimTrackMatchManager.h"
+#include "Validation/MuonGEMRecHits/interface/DigiMatcher.h"
+#include "Validation/MuonGEMRecHits/interface/GEMRecHitMatcher.h"
 
 using namespace std;
 using namespace edm;
+using namespace matching;
 
 
 
@@ -112,6 +117,8 @@ class MuonGEMRecHits : public edm::EDAnalyzer {
     bool isGEMRecHitMatched(MyGEMRecHit gem_recHit_, MyGEMSimHit gem_sh);
     bool isSimTrackGood(const SimTrack &t);
     void bookingME(const GEMGeometry* gem_geometry_);
+    void buildLUT();
+    std::pair<int,int> getClosestChambers(int region, float phi);
     
     virtual void beginJob() override;
     virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
@@ -124,13 +131,12 @@ class MuonGEMRecHits : public edm::EDAnalyzer {
 
       // ----------member data ---------------------------
     
-    bool debug_;
-    edm::InputTag gemRecHitInput_;
-    edm::InputTag gemSimHitInput_;
-    edm::InputTag simTrackInput_;
+    bool debug_;   
+    bool checkTrack_;
     std::string folderPath_;
     bool EffSaveRootFile_;
     std::string EffRootFileName_;
+
     
     DQMStore * dbe;
     std::map<std::string, MonitorElement*> meCollection;
@@ -151,7 +157,23 @@ class MuonGEMRecHits : public edm::EDAnalyzer {
     MySimTrack track_;
     /*-------------------------------------------------*/
 
+    edm::ParameterSet cfg_;
+    edm::InputTag gemRecHitInput_;
+    edm::InputTag gemSimHitInput_;
+    edm::InputTag simTrackInput_;    
+    double simTrackMinPt_;
+    double simTrackMaxPt_;
+    double simTrackMinEta_;
+    double simTrackMaxEta_;
+    double simTrackOnlyMuon_;
+    float radiusCenter_;
+    float chamberHeight_;
+    
+    std::pair<std::vector<float>,std::vector<int> > positiveLUT_;
+    std::pair<std::vector<float>,std::vector<int> > negativeLUT_;
+    
     bool hasGEMGeometry_;
+   
 };
 
 //
@@ -167,19 +189,35 @@ class MuonGEMRecHits : public edm::EDAnalyzer {
 //
 MuonGEMRecHits::MuonGEMRecHits(const edm::ParameterSet& iConfig):
 debug_(iConfig.getUntrackedParameter<bool>("debug")),
-gemRecHitInput_(iConfig.getUntrackedParameter<edm::InputTag>("gemRecHitInput")),
-gemSimHitInput_(iConfig.getUntrackedParameter<edm::InputTag>("gemSimHitInput")),
-simTrackInput_(iConfig.getUntrackedParameter<edm::InputTag>("simTrackInput")),
+checkTrack_(iConfig.getUntrackedParameter<bool>("AnalyzeTracks")),
 folderPath_(iConfig.getUntrackedParameter<std::string>("folderPath")),
 EffSaveRootFile_(iConfig.getUntrackedParameter<bool>("EffSaveRootFile")),
 EffRootFileName_(iConfig.getUntrackedParameter<std::string>("EffRootFileName"))
 {
+    
+    auto cfg_ = iConfig.getParameter<edm::ParameterSet>("simTrackMatching");
+    auto simTrack = cfg_.getParameter<edm::ParameterSet>("simTrack");
+    simTrackInput_ = simTrack.getParameter<edm::InputTag>("input");
+    simTrackMinPt_ = simTrack.getParameter<double>("minPt");
+    simTrackMaxPt_ = simTrack.getParameter<double>("maxPt");
+    simTrackMinEta_ = simTrack.getParameter<double>("minEta");
+    simTrackMaxEta_ = simTrack.getParameter<double>("maxEta");
+    simTrackOnlyMuon_ = simTrack.getParameter<bool>("onlyMuon");
+    
+    auto gemSimHit = cfg_.getParameter<edm::ParameterSet>("gemSimHit");
+    gemSimHitInput_ = gemSimHit.getParameter<edm::InputTag>("input");
+    
+    auto gemRecHit = cfg_.getParameter<edm::ParameterSet>("gemRecHit");
+    gemRecHitInput_ = gemRecHit.getParameter<edm::InputTag>("input");
+    
     dbe = edm::Service<DQMStore>().operator->();
     
     if(debug_) std::cout<<"booking Global histograms with "<<folderPath_<<std::endl;
     std::string folder;
     folder = folderPath_;
     dbe->setCurrentFolder(folder);
+    
+    hasGEMGeometry_=false;
 }
 
 
@@ -238,7 +276,7 @@ void
 MuonGEMRecHits::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
     using namespace edm;
- 
+    
     iEvent.getByLabel(gemRecHitInput_, gemRecHits_);
     iEvent.getByLabel(gemSimHitInput_, GEMHits);
     iEvent.getByLabel(simTrackInput_, sim_tracks);
@@ -253,11 +291,6 @@ MuonGEMRecHits::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         if (!isSimTrackGood(t)) continue;
         trackType.push_back(t.type());
         trackIds.push_back(t.trackId());
-        
-        track_.trkId = t.trackId();
-        track_.pt = t.momentum().pt();
-        track_.phi = t.momentum().phi();
-        track_.eta = t.momentum().eta();
         
     }
    
@@ -486,6 +519,197 @@ MuonGEMRecHits::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         gem_sh.countMatching = count;
         
     }
+    
+    ///////////////////////////////////
+    ///    Tracks
+    
+    const edm::SimVertexContainer & sim_vert = *sim_vertices.product();
+    if(checkTrack_){
+        for (auto& t: sim_trks)
+            {
+        if (!isSimTrackGood(t)) continue;
+        // match hits and digis to this SimTrack
+                cout<<"Check>>>>>>>>>>>>>>"<<endl;
+        SimTrackMatchManager match(t, sim_vert[t.vertIndex()], cfg_, iEvent, iSetup);
+                cout<<"Check>>>>>>>>>>>>>>"<<endl;
+        const SimHitMatcher& match_sh = match.simhits();
+        const GEMRecHitMatcher& match_rh = match.gemRecHits();
+        
+        track_.pt = t.momentum().pt();
+        track_.phi = t.momentum().phi();
+        track_.eta = t.momentum().eta();
+        track_.charge = t.charge();
+        track_.endcap = (track_.eta > 0.) ? 1 : -1;
+        track_.gem_sh_layer1 = 0;
+        track_.gem_sh_layer2 = 0;
+        track_.gem_rh_layer1 = 0;
+        track_.gem_rh_layer2 = 0;
+        track_.gem_sh_eta = -9.;
+        track_.gem_sh_phi = -9.;
+        track_.gem_sh_x = -999;
+        track_.gem_sh_y = -999;
+        track_.gem_rh_eta = -9.;
+        track_.gem_rh_phi = -9.;
+        track_.gem_trk_rho = -999.;
+        track_.gem_lx_even = -999.;
+        track_.gem_ly_even = -999.;
+        track_.gem_lx_odd = -999.;
+        track_.gem_ly_odd = -999.;
+        track_.has_gem_sh_l1 = 0;
+        track_.has_gem_sh_l2 = 0;
+        track_.has_gem_rh_l1 = 0;
+        track_.has_gem_rh_l2 = 0;
+        
+        // ** GEM SimHits ** //
+        auto gem_sh_ids_sch = match_sh.superChamberIdsGEM();
+        for(auto d: gem_sh_ids_sch)
+        {
+            auto gem_simhits = match_sh.hitsInSuperChamber(d);
+            auto gem_simhits_gp = match_sh.simHitsMeanPosition(gem_simhits);
+
+            track_.gem_sh_eta = gem_simhits_gp.eta();
+            track_.gem_sh_phi = gem_simhits_gp.phi();
+            track_.gem_sh_x = gem_simhits_gp.x();
+            track_.gem_sh_y = gem_simhits_gp.y();
+        }
+        
+        // Calculation of the localXY efficiency
+        GlobalPoint gp_track(match_sh.propagatedPositionGEM());
+        track_.gem_trk_eta = gp_track.eta();
+        track_.gem_trk_phi = gp_track.phi();
+        track_.gem_trk_rho = gp_track.perp();
+        //std::cout << "track eta phi rho = " << track_.gem_trk_eta << " " << track_.gem_trk_phi << " " << track_.gem_trk_rho << std::endl;
+        
+        float track_angle = gp_track.phi().degrees();
+        if (track_angle < 0.) track_angle += 360.;
+        //std::cout << "track angle = " << track_angle << std::endl;
+        const int track_region = (gp_track.z() > 0 ? 1 : -1);
+        
+        // closest chambers in phi
+        const auto mypair = getClosestChambers(track_region, track_angle);
+        
+        // chambers
+        GEMDetId detId_first(mypair.first);
+        GEMDetId detId_second(mypair.second);
+        
+        // assignment of local even and odd chambers (there is always an even and an odd chamber)
+        bool firstIsOdd = detId_first.chamber() & 1;
+        
+        GEMDetId detId_even_L1(firstIsOdd ? detId_second : detId_first);
+        GEMDetId detId_odd_L1(firstIsOdd ? detId_first : detId_second);
+        
+        auto even_partition = gem_geometry_->idToDetUnit(detId_even_L1)->surface();
+        auto odd_partition = gem_geometry_->idToDetUnit(detId_odd_L1)->surface();
+        
+        // global positions of partitions' centers
+        LocalPoint p0(0.,0.,0.);
+        GlobalPoint gp_even_partition = even_partition.toGlobal(p0);
+        GlobalPoint gp_odd_partition = odd_partition.toGlobal(p0);
+        
+        LocalPoint lp_track_even_partition = even_partition.toLocal(gp_track);
+        LocalPoint lp_track_odd_partition = odd_partition.toLocal(gp_track);
+        
+        // track chamber local x is the same as track partition local x
+        track_.gem_lx_even = lp_track_even_partition.x();
+        track_.gem_lx_odd = lp_track_odd_partition.x();
+        
+        // track chamber local y is the same as track partition local y
+        // corrected for partition's local y WRT chamber
+        track_.gem_ly_even = lp_track_even_partition.y() + (gp_even_partition.perp() - radiusCenter_);
+        track_.gem_ly_odd = lp_track_odd_partition.y() + (gp_odd_partition.perp() - radiusCenter_);
+        
+        //std::cout << track_.gem_lx_even << " " << track_.gem_ly_even << std::endl;
+        //std::cout << track_.gem_lx_odd << " " << track_.gem_ly_odd << std::endl;
+        
+        
+        auto gem_sh_ids_ch = match_sh.chamberIdsGEM();
+        for(auto d: gem_sh_ids_ch)
+        {
+            GEMDetId id(d);
+            bool odd(id.chamber() & 1);
+            
+            if (id.layer() == 1)
+            {
+                if (odd) track_.gem_sh_layer1 |= 1;
+                else track_.gem_sh_layer1 |= 2;
+            }
+            else if (id.layer() == 2)
+            {
+                if (odd) track_.gem_sh_layer2 |= 1;
+                else track_.gem_sh_layer2 |= 2;
+            }
+        }
+        
+        // ** GEM RecHits ** //
+        auto gem_rh_ids_sch = match_rh.superChamberIds();
+        for(auto d: gem_rh_ids_sch)
+        {
+            auto gem_recHits = match_rh.recHitsInSuperChamber(d);
+            auto gem_rh_gp = match_rh.recHitMeanPosition(gem_recHits);
+            
+            track_.gem_rh_eta = gem_rh_gp.eta();
+            track_.gem_rh_phi = gem_rh_gp.phi();
+            
+        }
+        
+        auto gem_rh_ids_ch = match_rh.chamberIds();
+        for(auto d: gem_rh_ids_ch)
+        {
+            GEMDetId id(d);
+            bool odd(id.chamber() & 1);
+            
+            if (id.layer() == 1)
+            {
+                if (odd)
+                {
+                    track_.gem_rh_layer1 |= 1;
+                }
+                else
+                {
+                    track_.gem_rh_layer1 |= 2;
+                }
+            }
+            else if (id.layer() == 2)
+            {
+                if (odd)
+                {
+                    track_.gem_rh_layer2 |= 1;
+                }
+                else
+                {
+                    track_.gem_rh_layer2 |= 2;
+                }
+            }
+        }
+        
+        // Construct Chamber DetIds from the "projected" ids:
+        GEMDetId id_ch_even_L1(detId_even_L1.region(), detId_even_L1.ring(), detId_even_L1.station(), 1, detId_even_L1.chamber(), 0);
+        GEMDetId id_ch_odd_L1(detId_odd_L1.region(), detId_odd_L1.ring(), detId_odd_L1.station(), 1, detId_odd_L1.chamber(), 0);
+        GEMDetId id_ch_even_L2(detId_even_L1.region(), detId_even_L1.ring(), detId_even_L1.station(), 2, detId_even_L1.chamber(), 0);
+        GEMDetId id_ch_odd_L2(detId_odd_L1.region(), detId_odd_L1.ring(), detId_odd_L1.station(), 2, detId_odd_L1.chamber(), 0);
+        
+        // check if track has sh
+        if(gem_sh_ids_ch.count(id_ch_even_L1)!=0) track_.has_gem_sh_l1 |= 2;
+        if(gem_sh_ids_ch.count(id_ch_odd_L1)!=0) track_.has_gem_sh_l1 |= 1;
+        if(gem_sh_ids_ch.count(id_ch_even_L2)!=0) track_.has_gem_sh_l2 |= 2;
+        if(gem_sh_ids_ch.count(id_ch_odd_L2)!=0) track_.has_gem_sh_l2 |= 1;
+        
+        // check if track has rh
+        if(gem_rh_ids_ch.count(id_ch_even_L1)!=0){
+            track_.has_gem_rh_l1 |= 2;
+        }
+        if(gem_rh_ids_ch.count(id_ch_odd_L1)!=0){
+            track_.has_gem_rh_l1 |= 1;
+        }
+        if(gem_rh_ids_ch.count(id_ch_even_L2)!=0){
+            track_.has_gem_rh_l2 |= 2;
+        }
+        if(gem_rh_ids_ch.count(id_ch_odd_L2)!=0){
+            track_.has_gem_rh_l2 |= 1;
+        }
+        
+    }
+    }
 }
     
 
@@ -587,8 +811,9 @@ void
 MuonGEMRecHits::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
 {
    try {
-    iSetup.get<MuonGeometryRecord>().get(gem_geom_);
-    gem_geometry_ = &*gem_geom_;
+       iSetup.get<MuonGeometryRecord>().get(gem_geom_);
+       gem_geometry_ = &*gem_geom_;
+       hasGEMGeometry_=true;
     } catch (edm::eventsetup::NoProxyException<GEMGeometry>& e) {
         hasGEMGeometry_ = false;
         edm::LogWarning("MuonGEMRecHits") << "+++ Info: GEM geometry is unavailable. +++\n";
@@ -609,6 +834,39 @@ MuonGEMRecHits::endRun(edm::Run const&, edm::EventSetup const&)
     
     if (EffSaveRootFile_) dbe->save(EffRootFileName_);
     
+}
+
+
+void MuonGEMRecHits::buildLUT()
+{
+    std::vector<int> pos_ids;
+    pos_ids.push_back(GEMDetId(1,1,1,1,36,1).rawId());
+    
+    std::vector<int> neg_ids;
+    neg_ids.push_back(GEMDetId(-1,1,1,1,36,1).rawId());
+    
+    // VK: I would really suggest getting phis from GEMGeometry
+    
+    std::vector<float> phis;
+    phis.push_back(0.);
+    for(int i=1; i<37; ++i)
+    {
+        pos_ids.push_back(GEMDetId(1,1,1,1,i,1).rawId());
+        neg_ids.push_back(GEMDetId(-1,1,1,1,i,1).rawId());
+        phis.push_back(i*10.);
+    }
+    positiveLUT_ = std::make_pair(phis,pos_ids);
+    negativeLUT_ = std::make_pair(phis,neg_ids);
+}
+
+std::pair<int,int> MuonGEMRecHits::getClosestChambers(int region, float phi)
+{
+    auto& phis(positiveLUT_.first);
+    auto upper = std::upper_bound(phis.begin(), phis.end(), phi);
+    //std::cout << "lower = " << upper - phis.begin() << std::endl;
+    //std::cout << "upper = " << upper - phis.begin() + 1 << std::endl;
+    auto& LUT = (region == 1 ? positiveLUT_.second : negativeLUT_.second);
+    return std::make_pair(LUT.at(upper - phis.begin()), (LUT.at((upper - phis.begin() + 1)%36)));
 }
 
 // ------------ method called when starting to processes a luminosity block  ------------
