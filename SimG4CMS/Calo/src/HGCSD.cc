@@ -41,9 +41,18 @@ HGCSD::HGCSD(G4String name, const DDCompactView & cpv,
 
   //this is defined in the hgcsens.xml
   G4String myName(this->nameOfSD());
-  myFwdSubdet_=ForwardSubdetector::ForwardEmpty;
-  if(myName.find("HitsEE")!=std::string::npos) myFwdSubdet_=ForwardSubdetector::HGCEE;
-  else if(myName.find("HitsHE")!=std::string::npos) myFwdSubdet_=ForwardSubdetector::HGCHE;
+  myFwdSubdet_= ForwardSubdetector::ForwardEmpty;
+  std::string nameX("HGCal");
+  if (myName.find("HitsEE")!=std::string::npos) {
+    myFwdSubdet_ = ForwardSubdetector::HGCEE;
+    nameX        = "HGCalEESensitive";
+  } else if (myName.find("HitsHEfront")!=std::string::npos) {
+    myFwdSubdet_ = ForwardSubdetector::HGCHEF;
+    nameX        = "HGCalHESiliconSensitive";
+  } else if (myName.find("HitsHEback")!=std::string::npos) {
+    myFwdSubdet_ = ForwardSubdetector::HGCHEB;
+    nameX        = "HGCalHEScintillatorSensitive";
+  }
 
 #ifdef DebugLog
   LogDebug("HGCSim") << "**************************************************" 
@@ -57,22 +66,7 @@ HGCSD::HGCSD(G4String name, const DDCompactView & cpv,
 #endif
   edm::LogInfo("HGCSim") << "HGCSD:: Threshold for storing hits: " << eminHit;
 
-  std::string attribute, value;
-  // Constants for Numbering Scheme
-  attribute = "Volume";
-  value     = "HGC";
-  DDSpecificsFilter filter0;
-  DDValue           ddv0(attribute, value, 0);
-  filter0.setCriteria(ddv0, DDSpecificsFilter::equals);
-  DDFilteredView fv0(cpv);
-  fv0.addFilter(filter0);
-  fv0.firstChild();
-  DDsvalues_type sv0(fv0.mergedSpecifics());
-
-  gpar    = getDDDArray("GeomParHGC",sv0);
-  std::vector<double>numberingPar(1,gpar[0]);
-  if(myFwdSubdet_==ForwardSubdetector::HGCHE) numberingPar[0]=gpar[1];
-  numberingScheme = new HGCNumberingScheme(numberingPar);
+  numberingScheme = new HGCNumberingScheme(cpv,nameX);
 }
 
 HGCSD::~HGCSD() { 
@@ -116,53 +110,34 @@ uint32_t HGCSD::setDetUnitId(G4Step * aStep) {
 
   //determine the exact position in global coordinates in the mass geometry 
   G4ThreeVector hitPoint    = preStepPoint->GetPosition();
+  float globalZ=touch->GetTranslation(0).z();
+  int iz( globalZ>0 ? 1 : -1);
 
   //convert to local coordinates (=local to the current volume): 
   G4ThreeVector localpos = touch->GetHistory()->GetTopTransform().TransformPoint(hitPoint);
-
-  //the solid of this detector
-  G4VSolid *solid = aStep->GetPreStepPoint()->GetPhysicalVolume()->GetLogicalVolume()->GetSolid();
-  G4Trap *layerSolid=(G4Trap *)solid;
-    
-  //FIXME urgently! no string parsing if possible
-  //  G4String nameVolume = preStepPoint->GetPhysicalVolume()->GetName();
-  ForwardSubdetector fwdSubdet(ForwardSubdetector::HGCEE);
-  //  if(nameVolume.find("HE")!=std::string::npos) fwdSubdet=ForwardSubdetector::HGCHE;
-  //  size_t pos=nameVolume.find("_")+1;
-  //  G4String layerStr=nameVolume.substr(pos,nameVolume.size()-1);
-  //  G4int copyNb=preStepPoint->GetPhysicalVolume()->GetCopyNo();
-
   
-  float dz(0), bl1(0),tl1(0),h1(0);
-  if(layerSolid){
-    dz =layerSolid->GetZHalfLength();   //half width of the layer
-    bl1=layerSolid->GetXHalfLength1();  //half x length of the side at -h1
-    tl1=layerSolid->GetXHalfLength2();  //half x length of the side at +h1
-    h1=layerSolid->GetYHalfLength1();   //half height of the side
-  }
-  else{
-    edm::LogError("HGCSim") << "[HGCSD] Failed to cast sensitive volume to trapezoid!! The DetIds will be missing lateral segmentation";
-    //throw cms::Exception("Unknown", "HGCSD") <<  "[HGCSD] Failed to cast sensitive volume to trapezoid!! The DetIds will be missing lateral segmentation\n";
-  }
-
   //get the det unit id with 
-  ForwardSubdetector subdet =  fwdSubdet;
-  //  int layer  = atoi(layerStr.c_str());
-  //  int module = copyNb;
-  //  int iz     = (hitPoint.z() > 0) ? 1 : -1;
+  ForwardSubdetector subdet = myFwdSubdet_;
 
   int layer  = touch->GetReplicaNumber(0);
   int module = touch->GetReplicaNumber(1);
-  int iz     = touch->GetReplicaNumber(3)==1 ? 1 : -1;
-  
-  //  std::cout << "layer=" << layer << "=" << touch->GetReplicaNumber(0) << "\t"
-  //  	    << "mod="   << module << "=" << touch->GetReplicaNumber(1) << "\t"
-  //	    << "izplmin=" << iz  << "=" << touch->GetReplicaNumber(3) << std::endl; 
-  //    int layer    = (touch->GetReplicaNumber(0));
-  //  int module = (touch->GetReplicaNumber(1));
-  //  int izplmin = (touch->GetReplicaNumber(3)); 
 
-  return setDetUnitId (subdet, layer, module, iz, localpos, dz, bl1, tl1, h1);
+  //gang in layers (otherwise DetId is not enough to accomodate all layers)
+  //new layer is negative if not to be looked at : set DetId to 0
+  if(numberingScheme)
+    {
+      layer=numberingScheme->getDDDConstants()->simToReco(1,layer,true).second;
+      if(layer<0) return 0;  
+    }
+
+  // if(iz<0) {
+  //     std::cout << "layer=" << layer << "=" << touch->GetReplicaNumber(0) << "\t"
+  // 	      << "mod="   << module << "=" << touch->GetReplicaNumber(1) << "\t"
+  // 	      << "izplmin=" << iz  << "=" << touch->GetReplicaNumber(3) << "\t"
+  // 	      << "globalZ=" << globalZ << std::endl; 
+  //}
+
+  return setDetUnitId (subdet, layer, module, iz, localpos);
 }
 
 void HGCSD::initRun() {
@@ -182,37 +157,11 @@ bool HGCSD::filterHit(CaloG4Hit* aHit, double time) {
 
 
 //
-uint32_t HGCSD::setDetUnitId (ForwardSubdetector &subdet, int &layer, int &module, int &iz, G4ThreeVector &pos, float &dz, float &bl1, float &tl1, float &h1)
-{  
-  return (numberingScheme ? numberingScheme->getUnitID(subdet, layer, module, iz, pos, dz, bl1, tl1, h1) : 0);
+uint32_t HGCSD::setDetUnitId (ForwardSubdetector &subdet, int &layer, int &module, int &iz, G4ThreeVector &pos) {  
+  return (numberingScheme ? numberingScheme->getUnitID(subdet, layer, module, iz, pos) : 0);
 }
 
 //
-std::vector<double> HGCSD::getDDDArray(const std::string & str,
-                                        const DDsvalues_type & sv) {
-#ifdef DebugLog
-  LogDebug("HGCSim") << "HGCSD:getDDDArray called for " << str;
-#endif
-  DDValue value(str);
-  if (DDfetch(&sv,value)) {
-#ifdef DebugLog
-    LogDebug("HGCSim") << value;
-#endif
-    const std::vector<double> & fvec = value.doubles();
-    int nval = fvec.size();
-    if (nval < 1) {
-      edm::LogError("HGCSim") << "HGCSD : # of " << str << " bins " << nval
-			      << " < 2 ==> illegal";
-      throw cms::Exception("Unknown", "HGCSD") << "nval < 2 for array " << str << "\n";
-    }
-    
-    return fvec;
-  } else {
-    edm::LogError("HGCSim") << "HGCSD :  cannot get array " << str;
-    throw cms::Exception("Unknown", "HGCSD") << "cannot get array " << str << "\n";
-  }
-}
-
 int HGCSD::setTrackID (G4Step* aStep) {
   theTrack     = aStep->GetTrack();
 

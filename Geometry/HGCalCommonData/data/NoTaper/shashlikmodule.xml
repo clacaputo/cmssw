@@ -41,10 +41,12 @@
   </LogicalPart>
 </LogicalPartSection>
 
-<Algorithm name="shashlik:DDShashlikModule">
+<Algorithm name="shashlik:DDShashlikTaperModule">
   <rParent name="shashlikmodule:ShashlikModule"/>
   <String name="ActiveMaterial"     value="shashlikmodule:LYSO"/>
   <String name="ActiveName"         value="shashlikmodule:ShashlikActive"/>
+  <String name="AbsorberMaterial"   value="materials:Tungsten"/>
+  <String name="AbsorberName"       value="shashlikmodule:ShashlikAbsorber"/>
   <Numeric name="ActiveLayers"      value="29"/>
   <Numeric name="ActiveThickness"   value="1.5*mm"/>
   <Numeric name="AbsorberThickness" value="2.5*mm"/>
@@ -52,7 +54,7 @@
   <Numeric name="WidthBack"         value="[widthBack]"/>
   <Numeric name="ModuleThickness"   value="[moduleThickness]"/>
   <Numeric name="ModuleTaperAngle"  value="[moduleTaperAngle]"/>
-  <Numeric name="HoleRadius"        value="0.8*mm"/>
+  <Numeric name="HoleRadius"        value="0.6*mm"/>
   <String name="FibreMaterial"      value="materials:Quartz"/>
   <String name="FibreName"          value="shashlikmodule:ShashlikFibre"/>
   <Vector name="HoleX" type="numeric" nEntries="4">

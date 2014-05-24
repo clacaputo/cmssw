@@ -19,8 +19,8 @@ class TrackIPTagPlotter : public BaseTagInfoPlotter {
 
   ~TrackIPTagPlotter () ;
 
-  void analyzeTag (const reco::BaseTagInfo * baseTagInfo, const int & jetFlavour);
-  void analyzeTag (const reco::BaseTagInfo * baseTagInfo, const int & jetFlavour, const float & w);
+  void analyzeTag (const reco::BaseTagInfo * baseTagInfo, const double & jec, const int & jetFlavour);
+  void analyzeTag (const reco::BaseTagInfo * baseTagInfo, const double & jec, const int & jetFlavour, const float & w);
 
   virtual void createPlotsForFinalize ();
   virtual void finalize ();
@@ -38,6 +38,7 @@ class TrackIPTagPlotter : public BaseTagInfoPlotter {
   double endEffPur_ ; 
   unsigned int mcPlots_;
   bool willFinalize_;
+  uint32_t m_maxPixelBarrelLayer, m_maxPixelEndcapLayer;
   bool makeQualityPlots_;
 
   TrackIPHistograms<double> * tkcntHistosSig3D[5];
