@@ -1,7 +1,7 @@
 #ifndef ME0HitsValidation_H
 #define ME0HitsValidation_H
 
-#include "Validation/MuonME0Hits/interface/ME0BaseValidation.h"
+#include "Validation/MuonME0Validation/interface/ME0BaseValidation.h"
 
 
 

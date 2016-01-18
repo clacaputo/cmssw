@@ -1,4 +1,4 @@
-#include "Validation/MuonME0Hits/interface/ME0HitsValidation.h"
+#include "Validation/MuonME0Validation/interface/ME0HitsValidation.h"
 #include "DataFormats/Common/interface/Handle.h"
 #include <TMath.h>
 

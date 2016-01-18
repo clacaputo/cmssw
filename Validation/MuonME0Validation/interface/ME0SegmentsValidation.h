@@ -1,7 +1,7 @@
 #ifndef ME0SegmentsValidation_H
 #define ME0SegmentsValidation_H
 
-#include "Validation/MuonME0Hits/interface/ME0BaseValidation.h"
+#include "Validation/MuonME0Validation/interface/ME0BaseValidation.h"
 
 #include <DataFormats/GEMRecHit/interface/ME0Segment.h>
 #include <DataFormats/GEMRecHit/interface/ME0SegmentCollection.h>

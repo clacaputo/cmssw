@@ -1,7 +1,7 @@
 #ifndef ME0DigisValidation_H
 #define ME0DigisValidation_H
 
-#include "Validation/MuonME0Hits/interface/ME0BaseValidation.h"
+#include "Validation/MuonME0Validation/interface/ME0BaseValidation.h"
 //Data Formats
 #include "DataFormats/GEMDigi/interface/ME0DigiPreReco.h"
 #include "DataFormats/GEMDigi/interface/ME0DigiPreRecoCollection.h"

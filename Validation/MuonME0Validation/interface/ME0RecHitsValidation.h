@@ -1,7 +1,7 @@
 #ifndef ME0RecHitsValidation_H
 #define ME0RecHitsValidation_H
 
-#include "Validation/MuonME0Hits/interface/ME0BaseValidation.h"
+#include "Validation/MuonME0Validation/interface/ME0BaseValidation.h"
 
 //Data Format
 #include <DataFormats/GEMRecHit/interface/ME0RecHit.h>

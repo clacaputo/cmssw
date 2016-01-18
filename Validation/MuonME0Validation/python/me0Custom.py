@@ -18,7 +18,7 @@ def customise_digitization(process):
 
 def customise_Validation(process):
   #process.load('Validation.MuonGEMHits.MuonGEMHits_cfi')
-  process.load('Validation.MuonME0Hits.me0SimValid_cff')
+  process.load('Validation.MuonME0Validation.me0SimValid_cff')
   process.genvalid_all += process.me0SimValid
   return process
 
