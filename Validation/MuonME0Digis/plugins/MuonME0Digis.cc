@@ -423,7 +423,7 @@ MuonME0Digis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
             GlobalPoint gp = surface.toGlobal(lp);
             Float_t g_r = (Float_t) gp.perp();
-          //  Float_t g_eta = (Float_t) gp.eta();
+            Float_t g_eta = (Float_t) gp.eta();
           //  Float_t g_phi = (Float_t) gp.phi();
             Float_t g_x = (Float_t) gp.x();
             Float_t g_y = (Float_t) gp.y();
@@ -433,21 +433,26 @@ MuonME0Digis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             int re(region);
             int la(layer);
 
+			//std::cout<<" Global Eta:  "<<g_eta<<std::endl;
 
             if(digiItr->prompt()){
-		  std::cout<<"Prompt"<<std::endl;
+		  //std::cout<<"Prompt"<<std::endl;
                   meCollection["strip_dg_R_prompt"]->Fill(g_r);
+                  meCollection["strip_dg_eta_prompt"]->Fill(std::fabs(g_eta));
                   meCollection["strip_dg_prompt_timing"]->Fill(timing);
                   if ( fabs(particleType) == 11 ) {
                     meCollection["strip_dg_R_prompt_e"]->Fill(g_r);
+                    meCollection["strip_dg_eta_prompt_e"]->Fill(std::fabs(g_eta));
                     meCollection["strip_dg_prompt_timing_e"]->Fill(timing);
                   }
                   if ( fabs(particleType) == 13 ) {
                     meCollection["strip_dg_R_prompt_m"]->Fill(g_r);
+                    meCollection["strip_dg_eta_prompt_m"]->Fill(std::fabs(g_eta));
                     meCollection["strip_dg_prompt_timing_m"]->Fill(timing);
                   }
                   if ( !(fabs(particleType) == 11 && fabs(particleType) == 13) )  {
                     meCollection["strip_dg_R_prompt_h"]->Fill(g_r);
+                    meCollection["strip_dg_eta_prompt_h"]->Fill(std::fabs(g_eta));
                     meCollection["strip_dg_prompt_timing_h"]->Fill(timing);
                   }
                   meCollection["strip_dg_zr_prompt"]->Fill(std::fabs(g_z),g_r);
@@ -468,17 +473,21 @@ MuonME0Digis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
             if(!(digiItr->prompt())){
                   meCollection["strip_dg_R_NoPrompt"]->Fill(g_r);
+                  meCollection["strip_dg_eta_NoPrompt"]->Fill(std::fabs(g_eta));
                   meCollection["strip_dg_timing_NoPrompt"]->Fill(timing);
                   if ( fabs(particleType) == 11 ){
                      meCollection["strip_dg_R_NoPrompt_e"]->Fill(g_r);
+                     meCollection["strip_dg_eta_NoPrompt_e"]->Fill(std::fabs(g_eta));
                      meCollection["strip_dg_timing_NoPrompt_e"]->Fill(timing);
                    }
                   if ( particleType == 2112 ){
                     meCollection["strip_dg_R_NoPrompt_n"]->Fill(g_r);
+                    meCollection["strip_dg_eta_NoPrompt_n"]->Fill(std::fabs(g_eta));
                     meCollection["strip_dg_timing_NoPrompt_n"]->Fill(timing);
                   }
                   if ( particleType == 22 ) {
                     meCollection["strip_dg_R_NoPrompt_g"]->Fill(g_r);
+                    meCollection["strip_dg_eta_NoPrompt_g"]->Fill(std::fabs(g_eta));
                     meCollection["strip_dg_timing_NoPrompt_g"]->Fill(timing);
                   }
                   meCollection["strip_dg_zr_NoPrompt"]->Fill(std::fabs(g_z),g_r);
@@ -576,6 +585,12 @@ void MuonME0Digis::beginRun(edm::Run const&, edm::EventSetup const& iSetup)
         meCollection["strip_dg_prompt_timing_e"]  =  dbe->book1D("strip_dg_prompt_timing_e","Digi Timing Distribution Prompt electrons; time [ns]; Events",250,-150,100);
         meCollection["strip_dg_prompt_timing_m"]  =  dbe->book1D("strip_dg_prompt_timing_m","Digi Timing Distribution Prompt muons; time [ns]; Events",250,-150,100);
         meCollection["strip_dg_prompt_timing_h"]  =  dbe->book1D("strip_dg_prompt_timing_h","Digi Timing Distribution Prompt hadrons; time [ns]; Events",250,-150,100);
+		// Prompt particles spectrum Vs Eta
+        meCollection["strip_dg_eta_prompt"]   =  dbe->book1D("strip_dg_eta_prompt","Digi |#eta| distribution Prompt; |#eta|; Events ",240,2.0,2.8);
+        meCollection["strip_dg_eta_prompt_e"] =  dbe->book1D("strip_dg_eta_prompt_e","Digi |#eta| distribution Prompt electrons; |#eta|; Events ",240,2.0,2.8);
+        meCollection["strip_dg_eta_prompt_m"] =  dbe->book1D("strip_dg_eta_prompt_m","Digi |#eta| distribution Prompt muons; |#eta|; Events ",240,2.0,2.8);
+        meCollection["strip_dg_eta_prompt_h"] =  dbe->book1D("strip_dg_eta_prompt_h","Digi |#eta| distribution Prompt hadrons; |#eta|; Events ",240,2.0,2.8);
+
 
         dbe->setCurrentFolder(noPrompt_folder);
         meCollection["strip_dg_zr_NoPrompt"]=dbe->book2D("strip_dg_zr_NoPrompt","Digi occupancy NoPrompt: region m1;global|Z| [cm];globalR [cm]",80,515,555,120,20,160);
@@ -589,7 +604,11 @@ void MuonME0Digis::beginRun(edm::Run const&, edm::EventSetup const& iSetup)
         meCollection["strip_dg_timing_NoPrompt_e"]  =  dbe->book1D("strip_dg_timing_NoPrompt_e","Digi Timing Distribution Prompt electrons; time [ns]; Events",250,-150,100);
         meCollection["strip_dg_timing_NoPrompt_n"]  =  dbe->book1D("strip_dg_timing_NoPrompt_m","Digi Timing Distribution Prompt neutrons; time [ns]; Events",250,-150,100);
         meCollection["strip_dg_timing_NoPrompt_g"]  =  dbe->book1D("strip_dg_timing_NoPrompt_h","Digi Timing Distribution Prompt gammas; time [ns]; Events",250,-150,100);
-
+		// NoPrompt particles spectrum Vs Eta
+        meCollection["strip_dg_eta_NoPrompt"]   =  dbe->book1D("strip_dg_eta_NoPrompt","Digi |#eta| distribution NoPrompt; |#eta|; Events ",240,2.0,2.8);
+        meCollection["strip_dg_eta_NoPrompt_e"] =  dbe->book1D("strip_dg_eta_NoPrompt_e","Digi |#eta| distribution NoPrompt electrons; |#eta|; Events ",240,2.0,2.8);
+        meCollection["strip_dg_eta_NoPrompt_n"] =  dbe->book1D("strip_dg_eta_NoPrompt_n","Digi |#eta| distribution NoPrompt neutrons; |#eta|; Events ",240,2.0,2.8);
+        meCollection["strip_dg_eta_NoPrompt_g"] =  dbe->book1D("strip_dg_eta_NoPrompt_g","Digi |#eta| distribution NoPrompt gammas; |#eta|; Events ",240,2.0,2.8);
 
 
     }
