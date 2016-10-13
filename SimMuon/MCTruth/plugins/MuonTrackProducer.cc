@@ -157,7 +157,6 @@ void MuonTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
       }
       // Track collection for GEMMuon
       else if (trackType == "GEMMuonTrack") {
-        std::cout<<" GEM!!!!! --- "<< muon->isGEMMuon() << std::endl;
 	       if (muon->innerTrack().isNonnull() && muon->isGEMMuon() ) trackref = muon->innerTrack();
 	       else continue;
       }
