@@ -80,7 +80,7 @@ glbCosmicMuonTrackVTrackAssoc.usemuon = True
 
 trkProbeTrackVMuonAssoc = Validation.RecoMuon.MuonTrackValidator_cfi.muonTrackValidator.clone()
 #trkMuonTrackVMuonAssoc = Validation.RecoMuon.MuonTrackValidator_cfi.muonTrackValidator.clone()
-trkProbeTrackVMuonAssoc.associatormap = 'tpToTkMuonAssociation' 
+trkProbeTrackVMuonAssoc.associatormap = 'tpToTkMuonAssociation'
 trkProbeTrackVMuonAssoc.associators = ('MuonAssociationByHits',)
 ##trkMuonTrackVMuonAssoc.label = ('generalTracks',)
 trkProbeTrackVMuonAssoc.label = ('probeTracks',)
@@ -114,6 +114,22 @@ glbMuonTrackVMuonAssoc.associators = ('MuonAssociationByHits',)
 glbMuonTrackVMuonAssoc.label = ('extractedGlobalMuons',)
 glbMuonTrackVMuonAssoc.usetracker = True
 glbMuonTrackVMuonAssoc.usemuon = True
+
+##GEMMuon
+GEMMuonTrackVMuonAssoc = Validation.RecoMuon.MuonTrackValidator_cfi.muonTrackValidator.clone()
+GEMMuonTrackVMuonAssoc.associatormap = 'tpToGEMMuonAssociation'
+GEMMuonTrackVMuonAssoc.associators = ('MuonAssociationByHits',)
+GEMMuonTrackVMuonAssoc.label = ('extractedGEMMuons',)
+GEMMuonTrackVMuonAssoc.usetracker = True
+GEMMuonTrackVMuonAssoc.usemuon = False
+
+##ME0Muon
+ME0MuonTrackVMuonAssoc = Validation.RecoMuon.MuonTrackValidator_cfi.muonTrackValidator.clone()
+ME0MuonTrackVMuonAssoc.associatormap = 'tpToME0MuonAssociation'
+ME0MuonTrackVMuonAssoc.associators = ('MuonAssociationByHits',)
+ME0MuonTrackVMuonAssoc.label = ('extractedME0Muons',)
+ME0MuonTrackVMuonAssoc.usetracker = True
+ME0MuonTrackVMuonAssoc.usemuon = False
 
 staRefitMuonTrackVMuonAssoc = Validation.RecoMuon.MuonTrackValidator_cfi.muonTrackValidator.clone()
 staRefitMuonTrackVMuonAssoc.associatormap = 'tpToStaRefitMuonAssociation'
@@ -370,6 +386,8 @@ muonValidation_seq = cms.Sequence(
     +tpToStaMuonAssociation + staMuonTrackVMuonAssoc
     +tpToStaUpdMuonAssociation + staUpdMuonTrackVMuonAssoc
     +extractedMuonTracks_seq + tpToGlbMuonAssociation + glbMuonTrackVMuonAssoc
+    +extractedGEMMuonTracks_seq +tpToGEMMuonAssociation +GEMMuonTrackVMuonAssoc  ##GEM Muon
+    +extractedME0MuonTracks_seq +tpToME0MuonAssociation +ME0MuonTrackVMuonAssoc  ##ME0 Muon
     +muonAssociatorByHitsNoSimHitsHelperTrk +recoMuonVMuAssoc_trk
     +muonAssociatorByHitsNoSimHitsHelperStandalone +recoMuonVMuAssoc_sta
     +muonAssociatorByHitsNoSimHitsHelperGlobal +recoMuonVMuAssoc_glb

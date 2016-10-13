@@ -33,7 +33,7 @@ MuonTrackProducer::MuonTrackProducer(const edm::ParameterSet& parset) :
 MuonTrackProducer::~MuonTrackProducer() {
 }
 
-void MuonTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) 
+void MuonTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   iEvent.getByToken(muonsToken,muonCollectionH);
   iEvent.getByToken(inputDTRecSegment4DToken_, dtSegmentCollectionH_);
@@ -67,7 +67,7 @@ void MuonTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
     int wheel = dtdetid.wheel();
     int station = dtdetid.station();
     int sector = dtdetid.sector();
-    
+
     float segmentX = segmentLocalPosition.x();
     float segmentY = segmentLocalPosition.y();
     float segmentdXdZ = segmentLocalDirection.x()/segmentLocalDirection.z();
@@ -77,11 +77,11 @@ void MuonTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
     float segmentdXdZerr = sqrt(segmentLocalDirectionError.xx());
     float segmentdYdZerr = sqrt(segmentLocalDirectionError.yy());
 
-    edm::LogVerbatim("MuonTrackProducer") 
+    edm::LogVerbatim("MuonTrackProducer")
       <<"\nDT segment index :"<<index_dt_segment
       <<"\nchamber Wh:"<<wheel<<",St:"<<station<<",Se:"<<sector
-      <<"\nLocal Position (X,Y)=("<<segmentX<<","<<segmentY<<") +/- ("<<segmentXerr<<","<<segmentYerr<<"), " 
-      <<"Local Direction (dXdZ,dYdZ)=("<<segmentdXdZ<<","<<segmentdYdZ<<") +/- ("<<segmentdXdZerr<<","<<segmentdYdZerr<<")"; 
+      <<"\nLocal Position (X,Y)=("<<segmentX<<","<<segmentY<<") +/- ("<<segmentXerr<<","<<segmentYerr<<"), "
+      <<"Local Direction (dXdZ,dYdZ)=("<<segmentdXdZ<<","<<segmentdYdZ<<") +/- ("<<segmentdXdZerr<<","<<segmentdYdZerr<<")";
   }
 
   edm::LogVerbatim("MuonTrackProducer") <<"\nThere are "<< cscSegmentCollectionH_->size()<<" CSC segments.";
@@ -98,8 +98,8 @@ void MuonTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
     int endcap = cscdetid.endcap();
     int station = cscdetid.station();
     int ring = cscdetid.ring();
-    int chamber = cscdetid.chamber(); 
-    
+    int chamber = cscdetid.chamber();
+
     float segmentX = segmentLocalPosition.x();
     float segmentY = segmentLocalPosition.y();
     float segmentdXdZ = segmentLocalDirection.x()/segmentLocalDirection.z();
@@ -109,11 +109,11 @@ void MuonTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
     float segmentdXdZerr = sqrt(segmentLocalDirectionError.xx());
     float segmentdYdZerr = sqrt(segmentLocalDirectionError.yy());
 
-    edm::LogVerbatim("MuonTrackProducer") 
+    edm::LogVerbatim("MuonTrackProducer")
       <<"\nCSC segment index :"<<index_csc_segment
       <<"\nchamber Endcap:"<<endcap<<",St:"<<station<<",Ri:"<<ring<<",Ch:"<<chamber
-      <<"\nLocal Position (X,Y)=("<<segmentX<<","<<segmentY<<") +/- ("<<segmentXerr<<","<<segmentYerr<<"), " 
-      <<"Local Direction (dXdZ,dYdZ)=("<<segmentdXdZ<<","<<segmentdYdZ<<") +/- ("<<segmentdXdZerr<<","<<segmentdYdZerr<<")"; 
+      <<"\nLocal Position (X,Y)=("<<segmentX<<","<<segmentY<<") +/- ("<<segmentXerr<<","<<segmentYerr<<"), "
+      <<"Local Direction (dXdZ,dYdZ)=("<<segmentdXdZ<<","<<segmentdYdZ<<") +/- ("<<segmentdXdZerr<<","<<segmentdYdZerr<<")";
   }
 
   edm::LogVerbatim("MuonTrackProducer") <<"\nThere are "<< muonCollectionH->size() <<" reco::Muons.";
@@ -121,8 +121,8 @@ void MuonTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
   for(reco::MuonCollection::const_iterator muon = muonCollectionH->begin();
        muon != muonCollectionH->end(); ++muon, muon_index++) {
     edm::LogVerbatim("MuonTrackProducer") <<"\n******* muon index : "<<muon_index;
-    
-    std::vector<bool> isGood;    
+
+    std::vector<bool> isGood;
     for(unsigned int index=0; index<selectionTags.size(); ++index) {
       isGood.push_back(false);
 
@@ -142,11 +142,11 @@ void MuonTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
       if (trackType == "innerTrack") {
         if (muon->innerTrack().isNonnull()) trackref = muon->innerTrack();
         else continue;
-      } 
+      }
       else if (trackType == "outerTrack") {
         if (muon->outerTrack().isNonnull()) trackref = muon->outerTrack();
         else continue;
-      } 
+      }
       else if (trackType == "globalTrack") {
         if (muon->globalTrack().isNonnull()) trackref = muon->globalTrack();
         else continue;
@@ -154,6 +154,22 @@ void MuonTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
       else if (trackType == "innerTrackPlusSegments") {
 	if (muon->innerTrack().isNonnull()) trackref = muon->innerTrack();
 	else continue;
+      }
+      // Track collection for GEMMuon
+      else if (trackType == "GEMMuonTrack") {
+        std::cout<<" GEM!!!!! --- "<< muon->isGEMMuon() << std::endl;
+	       if (muon->innerTrack().isNonnull() && muon->isGEMMuon() ) trackref = muon->innerTrack();
+	       else continue;
+      }
+      // Track collection for ME0Muon
+      else if (trackType == "ME0MuonTrack") {
+	       if (muon->innerTrack().isNonnull() && muon->isME0Muon() ) trackref = muon->innerTrack();
+	       else continue;
+      }
+      // Track collection for RPCMuon
+      else if (trackType == "RPCMuonTrack") {
+	       if (muon->innerTrack().isNonnull() && muon->isRPCMuon() ) trackref = muon->innerTrack();
+	       else continue;
       }
 
       const reco::Track* trk = &(*trackref);
@@ -163,14 +179,14 @@ void MuonTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
       newTrk->setExtra( reco::TrackExtraRef( rTrackExtras, idx++ ) );
       PropagationDirection seedDir = trk->seedDirection();
       // new copy of track Extras
-      reco::TrackExtra * newExtra = new reco::TrackExtra( trk->outerPosition(), trk->outerMomentum(), 
-                                        trk->outerOk(), trk->innerPosition(), 
+      reco::TrackExtra * newExtra = new reco::TrackExtra( trk->outerPosition(), trk->outerMomentum(),
+                                        trk->outerOk(), trk->innerPosition(),
                                         trk->innerMomentum(), trk->innerOk(),
                                         trk->outerStateCovariance(), trk->outerDetId(),
                                         trk->innerStateCovariance(), trk->innerDetId() , seedDir ) ;
 
       // new copy of the silicon hits; add hit refs to Extra and hits to hit collection
-      
+
       //      edm::LogVerbatim("MuonTrackProducer")<<"\n printing initial hit_pattern";
       //      trk->hitPattern().print();
       unsigned int nHitsToAdd = 0;
@@ -181,30 +197,30 @@ void MuonTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
       }
       newExtra->setHits( rHits, hidx, nHitsToAdd );
       hidx += nHitsToAdd;
-      if (trackType == "innerTrackPlusSegments") { 
-	
+      if (trackType == "innerTrackPlusSegments") {
+
 	int wheel, station, sector;
 	int endcap, /*station, */ ring, chamber;
-	
+
 	edm::LogVerbatim("MuonTrackProducer") <<"Number of chambers: "<<muon->matches().size()
 					      <<", arbitrated: "<<muon->numberOfMatches(reco::Muon::SegmentAndTrackArbitration);
 	unsigned int index_chamber = 0;
-	
+
 	for(std::vector<reco::MuonChamberMatch>::const_iterator chamberMatch = muon->matches().begin();
 	    chamberMatch != muon->matches().end(); ++chamberMatch, index_chamber++) {
 	  std::stringstream chamberStr;
-	  chamberStr <<"\nchamber index: "<<index_chamber; 
-	  
+	  chamberStr <<"\nchamber index: "<<index_chamber;
+
 	  int subdet = chamberMatch->detector();
 	  DetId did = chamberMatch->id;
-	  
+
 	  if (subdet == MuonSubdetId::DT) {
 	    DTChamberId dtdetid = DTChamberId(did);
 	    wheel = dtdetid.wheel();
 	    station = dtdetid.station();
 	    sector = dtdetid.sector();
 	    chamberStr << ", DT chamber Wh:"<<wheel<<",St:"<<station<<",Se:"<<sector;
-	  } 
+	  }
 	  else if (subdet == MuonSubdetId::CSC) {
 	    CSCDetId cscdetid = CSCDetId(did);
 	    endcap = cscdetid.endcap();
@@ -213,15 +229,15 @@ void MuonTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
 	    chamber = cscdetid.chamber();
 	    chamberStr << ", CSC chamber End:"<<endcap<<",St:"<<station<<",Ri:"<<ring<<",Ch:"<<chamber;
 	  }
-	  
+
 	  chamberStr << ", Number of segments: "<<chamberMatch->segmentMatches.size();
 	  edm::LogVerbatim("MuonTrackProducer") << chamberStr.str();
 
 	  unsigned int index_segment = 0;
-	  
+
 	  for(std::vector<reco::MuonSegmentMatch>::const_iterator segmentMatch = chamberMatch->segmentMatches.begin();
 	      segmentMatch != chamberMatch->segmentMatches.end(); ++segmentMatch, index_segment++) {
-	    
+
 	    float segmentX = segmentMatch->x;
 	    float segmentY = segmentMatch->y ;
 	    float segmentdXdZ = segmentMatch->dXdZ;
@@ -230,29 +246,29 @@ void MuonTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
 	    float segmentYerr = segmentMatch->yErr;
 	    float segmentdXdZerr = segmentMatch->dXdZErr;
 	    float segmentdYdZerr = segmentMatch->dYdZErr;
-	    
+
 	    CSCSegmentRef segmentCSC = segmentMatch->cscSegmentRef;
 	    DTRecSegment4DRef segmentDT = segmentMatch->dtSegmentRef;
-	    
-	    bool segment_arbitrated_Ok = (segmentMatch->isMask(reco::MuonSegmentMatch::BestInChamberByDR) && 
+
+	    bool segment_arbitrated_Ok = (segmentMatch->isMask(reco::MuonSegmentMatch::BestInChamberByDR) &&
 					  segmentMatch->isMask(reco::MuonSegmentMatch::BelongsToTrackByDR));
-	    
+
 	    std::string ARBITRATED(" ***Arbitrated Off*** ");
 	    if (segment_arbitrated_Ok) ARBITRATED = " ***ARBITRATED OK*** ";
 
-	    if (subdet == MuonSubdetId::DT) {	      
+	    if (subdet == MuonSubdetId::DT) {
 	      edm::LogVerbatim("MuonTrackProducer")
 		<<"\n\t segment index: "<<index_segment << ARBITRATED
-		<<"\n\t  Local Position (X,Y)=("<<segmentX<<","<<segmentY<<") +/- ("<<segmentXerr<<","<<segmentYerr<<"), " 
-		<<"\n\t  Local Direction (dXdZ,dYdZ)=("<<segmentdXdZ<<","<<segmentdYdZ<<") +/- ("<<segmentdXdZerr<<","<<segmentdYdZerr<<")"; 
-	      
+		<<"\n\t  Local Position (X,Y)=("<<segmentX<<","<<segmentY<<") +/- ("<<segmentXerr<<","<<segmentYerr<<"), "
+		<<"\n\t  Local Direction (dXdZ,dYdZ)=("<<segmentdXdZ<<","<<segmentdYdZ<<") +/- ("<<segmentdXdZerr<<","<<segmentdYdZerr<<")";
+
 	      if (!segment_arbitrated_Ok) continue;
-	      
+
 	      if (segmentDT.get() != 0) {
 		const DTRecSegment4D* segment = segmentDT.get();
-		
+
 		edm::LogVerbatim("MuonTrackProducer")<<"\t ===> MATCHING with DT segment with index = "<<segmentDT.key();
-		
+
 		if(segment->hasPhi()) {
 		  const DTChamberRecSegment2D* phiSeg = segment->phiSegment();
 		  std::vector<const TrackingRecHit*> phiHits = phiSeg->recHits();
@@ -269,7 +285,7 @@ void MuonTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
                   newExtra->setHits( rHits, hidx, nHitsAdded );
                   hidx += nHitsAdded;
 		}
-		
+
 		if(segment->hasZed()) {
 		  const DTSLRecSegment2D* zSeg = (*segment).zSegment();
 		  std::vector<const TrackingRecHit*> zedHits = zSeg->recHits();
@@ -292,16 +308,16 @@ void MuonTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
 	    else if (subdet == MuonSubdetId::CSC) {
 	      edm::LogVerbatim("MuonTrackProducer")
 		<<"\n\t segment index: "<<index_segment << ARBITRATED
-		<<"\n\t  Local Position (X,Y)=("<<segmentX<<","<<segmentY<<") +/- ("<<segmentXerr<<","<<segmentYerr<<"), " 
-		<<"\n\t  Local Direction (dXdZ,dYdZ)=("<<segmentdXdZ<<","<<segmentdYdZ<<") +/- ("<<segmentdXdZerr<<","<<segmentdYdZerr<<")"; 
-	      
+		<<"\n\t  Local Position (X,Y)=("<<segmentX<<","<<segmentY<<") +/- ("<<segmentXerr<<","<<segmentYerr<<"), "
+		<<"\n\t  Local Direction (dXdZ,dYdZ)=("<<segmentdXdZ<<","<<segmentdYdZ<<") +/- ("<<segmentdXdZerr<<","<<segmentdYdZerr<<")";
+
 	      if (!segment_arbitrated_Ok) continue;
-	      
+
 	      if (segmentCSC.get() != 0) {
 		const CSCSegment* segment = segmentCSC.get();
-		
+
 		edm::LogVerbatim("MuonTrackProducer")<<"\t ===> MATCHING with CSC segment with index = "<<segmentCSC.key();
-		
+
 		std::vector<const TrackingRecHit*> hits = segment->recHits();
                 unsigned int nHitsAdded = 0;
 		for(std::vector<const TrackingRecHit*>::const_iterator ihit = hits.begin();
@@ -318,19 +334,19 @@ void MuonTrackProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
 	      } else edm::LogWarning("MuonTrackProducer")<<"\n***WARNING: UNMATCHED CSC segment ! \n";
 	    }  //  else if (subdet == MuonSubdetId::CSC)
 
-	  } // loop on vector<MuonSegmentMatch>	  
-	} // loop on vector<MuonChamberMatch>	
+	  } // loop on vector<MuonSegmentMatch>
+	} // loop on vector<MuonChamberMatch>
       } // if (trackType == "innerTrackPlusSegments")
-      
+
       //      edm::LogVerbatim("MuonTrackProducer")<<"\n printing final hit_pattern";
       //      newTrk->hitPattern().print();
-      
+
       selectedTracks->push_back( *newTrk );
       selectedTrackExtras->push_back( *newExtra );
 
     } // if (isGoodResult)
   }  // loop on reco::MuonCollection
-  
+
   iEvent.put(std::move(selectedTracks));
   iEvent.put(std::move(selectedTrackExtras));
   iEvent.put(std::move(selectedTrackHits));
