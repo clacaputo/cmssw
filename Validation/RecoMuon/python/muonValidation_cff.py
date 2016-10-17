@@ -120,6 +120,9 @@ GEMMuonTrackVMuonAssoc = Validation.RecoMuon.MuonTrackValidator_cfi.muonTrackVal
 GEMMuonTrackVMuonAssoc.associatormap = 'tpToGEMMuonAssociation'
 GEMMuonTrackVMuonAssoc.associators = ('MuonAssociationByHits',)
 GEMMuonTrackVMuonAssoc.label = ('extractedGEMMuons',)
+GEMMuonTrackVMuonAssoc.minRapidityTP = 1.6
+GEMMuonTrackVMuonAssoc.maxRapidityTP = 2.4
+GEMMuonTrackVMuonAssoc.useFabsEta = True
 GEMMuonTrackVMuonAssoc.usetracker = True
 GEMMuonTrackVMuonAssoc.usemuon = False
 
@@ -128,6 +131,9 @@ ME0MuonTrackVMuonAssoc = Validation.RecoMuon.MuonTrackValidator_cfi.muonTrackVal
 ME0MuonTrackVMuonAssoc.associatormap = 'tpToME0MuonAssociation'
 ME0MuonTrackVMuonAssoc.associators = ('MuonAssociationByHits',)
 ME0MuonTrackVMuonAssoc.label = ('extractedME0Muons',)
+ME0MuonTrackVMuonAssoc.minRapidityTP = 2.0
+ME0MuonTrackVMuonAssoc.maxRapidityTP = 2.8
+ME0MuonTrackVMuonAssoc.useFabsEta = True
 ME0MuonTrackVMuonAssoc.usetracker = True
 ME0MuonTrackVMuonAssoc.usemuon = False
 

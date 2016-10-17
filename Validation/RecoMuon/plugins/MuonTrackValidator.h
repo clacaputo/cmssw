@@ -23,6 +23,7 @@ class MuonTrackValidator : public DQMEDAnalyzer, protected MuonTrackValidatorBas
     associatormap = pset.getParameter< edm::InputTag >("associatormap");
     UseAssociators = pset.getParameter< bool >("UseAssociators");
     useGEMs_ = pset.getParameter< bool >("useGEMs");
+    useME0s_ = pset.getParameter< bool >("useME0s");
     tpSelector = TrackingParticleSelector(pset.getParameter<double>("ptMinTP"),
 					  pset.getParameter<double>("minRapidityTP"),
 					  pset.getParameter<double>("maxRapidityTP"),
@@ -42,7 +43,7 @@ class MuonTrackValidator : public DQMEDAnalyzer, protected MuonTrackValidatorBas
 						      pset.getParameter<int>("minHitTP"),
 						      pset.getParameter<bool>("chargedOnlyTP"),
 						      pset.getParameter<std::vector<int> >("pdgIdTP"));
-    
+
     minPhi = pset.getParameter<double>("minPhi");
     maxPhi = pset.getParameter<double>("maxPhi");
     nintPhi = pset.getParameter<int>("nintPhi");
@@ -51,7 +52,7 @@ class MuonTrackValidator : public DQMEDAnalyzer, protected MuonTrackValidatorBas
 
     // dump cfg parameters
     edm::LogVerbatim("MuonTrackValidator") << "constructing MuonTrackValidator: " << pset.dump();
-    
+
     // Declare consumes (also for the base class)
     bsSrc_Token = consumes<reco::BeamSpot>(bsSrc);
     tp_effic_Token = consumes<TrackingParticleCollection>(label_tp_effic);
@@ -77,7 +78,7 @@ class MuonTrackValidator : public DQMEDAnalyzer, protected MuonTrackValidatorBas
         consumes<reco::TrackToTrackingParticleAssociator>(edm::InputTag(associator));
       }
     }
-    
+
     // inform on which SimHits will be counted
     if (usetracker) edm::LogVerbatim("MuonTrackValidator")
       <<"\n usetracker = TRUE : Tracker SimHits WILL be counted";
@@ -87,12 +88,12 @@ class MuonTrackValidator : public DQMEDAnalyzer, protected MuonTrackValidatorBas
       <<" usemuon = TRUE : Muon SimHits WILL be counted";
     else edm::LogVerbatim("MuonTrackValidator")
       <<" usemuon = FALSE : Muon SimHits WILL NOT be counted"<<std::endl;
-    
+
     // loop over the reco::Track collections to validate: check for inconsistent input settings
     for (unsigned int www=0;www<label.size();www++) {
       std::string recoTracksLabel = label[www].label();
       std::string recoTracksInstance = label[www].instance();
-      
+
       // tracks with hits only on tracker
       if (recoTracksLabel=="generalTracks" ||
 	  (recoTracksLabel.find("cutsRecoTracks") != std::string::npos) ||
@@ -109,9 +110,9 @@ class MuonTrackValidator : public DQMEDAnalyzer, protected MuonTrackValidatorBas
 	    edm::LogWarning("MuonTrackValidator")
 	      <<"\n*** WARNING : inconsistent input tracksTag = "<<label[www]
 	      <<"\n with usetracker == false"<<"\n ---> please change to usetracker == true ";
-	  }	
+	  }
 	}
-      
+
       // tracks with hits only on muon detectors
       else if (recoTracksLabel=="standAloneMuons" ||
 	       recoTracksLabel=="standAloneSETMuons" ||
@@ -129,10 +130,10 @@ class MuonTrackValidator : public DQMEDAnalyzer, protected MuonTrackValidatorBas
 	      <<"\n with usemuon == false"<<"\n ---> please change to usemuon == true ";
 	  }
 	}
-      
+
     } // for (unsigned int www=0;www<label.size();www++)
   }
-  
+
   /// Destructor
   virtual ~MuonTrackValidator(){ }
 
@@ -162,20 +163,20 @@ private:
   edm::EDGetTokenT<SimHitTPAssociationProducer::SimHitTPAssociationList> _simHitTpMapTag;
 
   bool UseAssociators;
-  bool useGEMs_;
+  bool useGEMs_,useME0s_;
   double minPhi, maxPhi;
   int nintPhi;
   bool useGsf;
   // select tracking particles
   //(i.e. "denominator" of the efficiency ratio)
-  TrackingParticleSelector tpSelector;	
+  TrackingParticleSelector tpSelector;
   CosmicTrackingParticleSelector cosmictpSelector;
 
   // flag new validation logic (bidirectional RecoToSim association)
   bool BiDirectional_RecoToSim_association;
   // flag MuonAssociatorByHits
   bool MABH;
-  
+
   //1D
   std::vector<MonitorElement*> h_nchi2, h_nchi2_prob, h_losthits;
 

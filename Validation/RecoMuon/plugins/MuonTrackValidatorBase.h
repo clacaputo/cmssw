@@ -109,10 +109,10 @@ class MuonTrackValidatorBase {
 	minpT=log10(minpT);
       }
     }
-  
+
   /// Destructor
   virtual ~MuonTrackValidatorBase() noexcept(false) { }
-  
+
   virtual void doProfileX(TH2 * th2, MonitorElement* me){
     if (th2->GetNbinsX()==me->getNbinsX()){
       TProfile * p1 = (TProfile*) th2->ProfileX();
@@ -136,7 +136,7 @@ class MuonTrackValidatorBase {
     if (useInvPt && pt!=0) return 1/pt;
     else return pt;
   }
-  
+
   void fillPlotFromVector(MonitorElement* h, std::vector<int>& vec) {
     for (unsigned int j=0; j<vec.size(); j++){
       h->setBinContent(j+1, vec[j]);
@@ -164,18 +164,18 @@ h->setBinContent(j+1, 0);
 
   void BinLogX(TH1*h)
   {
-    
+
     TAxis *axis = h->GetXaxis();
     int bins = axis->GetNbins();
-    
+
     float from = axis->GetXmin();
     float to = axis->GetXmax();
     float width = (to - from) / bins;
     float *new_bins = new float[bins + 1];
-    
+
     for (int i = 0; i <= bins; i++) {
       new_bins[i] = TMath::Power(10, from + i * width);
-      
+
     }
     axis->Set(bins, new_bins);
     delete[] new_bins;
@@ -224,7 +224,7 @@ h->setBinContent(j+1, 0);
     //
     totASSeta_Quality05.push_back(totASSveta_Quality05);
     totASSeta_Quality075.push_back(totASSveta_Quality075);
-  
+
     double steppT = (maxpT-minpT)/nintpT;
     pTintervalsv.push_back(minpT);
     for (int k=1;k<nintpT+1;k++) {
@@ -326,7 +326,7 @@ h->setBinContent(j+1, 0);
     vertposintervals.push_back(vertposintervalsv);
     totSIM_vertpos.push_back(totSIMv_vertpos);
     totASS_vertpos.push_back(totASSv_vertpos);
-      
+
     double stepZpos = (maxZpos-minZpos)/nintZpos;
     zposintervalsv.push_back(minZpos);
     for (int k=1;k<nintZpos+1;k++) {
@@ -358,7 +358,7 @@ h->setBinContent(j+1, 0);
   edm::EDGetTokenT<reco::BeamSpot> bsSrc_Token;
   edm::EDGetTokenT<TrackingParticleCollection> tp_effic_Token;
   edm::EDGetTokenT<TrackingParticleCollection> tp_fake_Token;
-       
+
   double min, max;
   int nint;
   bool useFabs;
@@ -416,11 +416,11 @@ h->setBinContent(j+1, 0);
 
   //#hit vs eta: to be used with doProfileX
   std::vector<MonitorElement*> nhits_vs_eta,
-    nDThits_vs_eta,nCSChits_vs_eta,nRPChits_vs_eta,nGEMhits_vs_eta;
+    nDThits_vs_eta,nCSChits_vs_eta,nRPChits_vs_eta,nGEMhits_vs_eta,nME0hits_vs_eta;
 
   std::vector<MonitorElement*> h_hits_eta,
-    h_DThits_eta,h_CSChits_eta,h_RPChits_eta,h_GEMhits_eta;;
-    
+    h_DThits_eta,h_CSChits_eta,h_RPChits_eta,h_GEMhits_eta,h_ME0hits_eta;
+
 
   std::vector< std::vector<double> > etaintervals;
   std::vector< std::vector<double> > pTintervals;

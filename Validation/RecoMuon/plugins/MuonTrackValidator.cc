@@ -60,7 +60,7 @@ void MuonTrackValidator::bookHistograms(DQMStore::IBooker& ibooker, edm::Run con
       h_etaSIM.push_back( ibooker.book1D("etaSIM", "generated pseudorapidity", 500, -2.5, 2.5 ) );
       h_tracksSIM.push_back( ibooker.book1D("tracksSIM","number of simulated tracks",200,-0.5,99.5) );
       h_vertposSIM.push_back( ibooker.book1D("vertposSIM","Transverse position of sim vertices",100,0.,120.) );
-      
+
       ibooker.cd();
       ibooker.setCurrentFolder(dirName.c_str());
       h_tracks.push_back( ibooker.book1D("tracks","number of reconstructed tracks",200,-0.5,19.5) );
@@ -95,7 +95,7 @@ void MuonTrackValidator::bookHistograms(DQMStore::IBooker& ibooker, edm::Run con
       h_assocdxy.push_back( ibooker.book1D("num_assoc(simToReco)_dxy","N of associated tracks (simToReco) vs dxy",nintDxy,minDxy,maxDxy) );
       h_assoc2dxy.push_back( ibooker.book1D("num_assoc(recoToSim)_dxy","N of associated (recoToSim) tracks vs dxy",nintDxy,minDxy,maxDxy) );
       h_simuldxy.push_back( ibooker.book1D("num_simul_dxy","N of simulated tracks vs dxy",nintDxy,minDxy,maxDxy) );
-      
+
       h_recodz.push_back( ibooker.book1D("num_reco_dz","N of reco track vs dz",nintDz,minDz,maxDz) );
       h_assocdz.push_back( ibooker.book1D("num_assoc(simToReco)_dz","N of associated tracks (simToReco) vs dz",nintDz,minDz,maxDz) );
       h_assoc2dz.push_back( ibooker.book1D("num_assoc(recoToSim)_dz","N of associated (recoToSim) tracks vs dz",nintDz,minDz,maxDz) );
@@ -116,7 +116,7 @@ void MuonTrackValidator::bookHistograms(DQMStore::IBooker& ibooker, edm::Run con
       h_pullDxy.push_back( ibooker.book1D("pullDxy","pull of dxy parameter",250,-25,25) );
       h_pullDz.push_back( ibooker.book1D("pullDz","pull of dz parameter",250,-25,25) );
       h_pullQoverp.push_back( ibooker.book1D("pullQoverp","pull of qoverp parameter",250,-25,25) );
-      
+
       if (associators[ww]=="trackAssociatorByChi2"){
 	h_assochi2.push_back( ibooker.book1D("assocChi2","track association #chi^{2}",1000000,0,100000) );
 	h_assochi2_prob.push_back(ibooker.book1D("assocChi2_prob","probability of association #chi^{2}",100,0,1));
@@ -124,7 +124,7 @@ void MuonTrackValidator::bookHistograms(DQMStore::IBooker& ibooker, edm::Run con
 	h_assocFraction.push_back( ibooker.book1D("assocFraction","fraction of shared hits",200,0,2) );
 	h_assocSharedHit.push_back(ibooker.book1D("assocSharedHit","number of shared hits",20,0,20));
       }
-      
+
       chi2_vs_nhits.push_back( ibooker.book2D("chi2_vs_nhits","#chi^{2} vs nhits",25,0,25,100,0,10) );
       h_chi2meanhitsh.push_back( ibooker.bookProfile("chi2mean_vs_nhits","mean #chi^{2} vs nhits",25,0,25,100,0,10) );
 
@@ -141,11 +141,13 @@ void MuonTrackValidator::bookHistograms(DQMStore::IBooker& ibooker, edm::Run con
       nCSChits_vs_eta.push_back( ibooker.book2D("nCSChits_vs_eta","# CSC hits vs eta",nint,min,max,nintHit,minHit,maxHit) );
       nRPChits_vs_eta.push_back( ibooker.book2D("nRPChits_vs_eta","# RPC hits vs eta",nint,min,max,nintHit,minHit,maxHit) );
       if(useGEMs_) nGEMhits_vs_eta.push_back( ibooker.book2D("nGEMhits_vs_eta","# GEM hits vs eta",nint,min,max,nintHit,minHit,maxHit) );
+      if(useME0s_) nME0hits_vs_eta.push_back( ibooker.book2D("nME0hits_vs_eta","# ME0 hits vs eta",nint,min,max,nintHit,minHit,maxHit) );
 
       h_DThits_eta.push_back( ibooker.bookProfile("DThits_eta","mean # DT hits vs eta",nint,min,max,nintHit,minHit,maxHit) );
       h_CSChits_eta.push_back( ibooker.bookProfile("CSChits_eta","mean # CSC hits vs eta",nint,min,max,nintHit,minHit,maxHit) );
       h_RPChits_eta.push_back( ibooker.bookProfile("RPChits_eta","mean # RPC hits vs eta",nint,min,max,nintHit,minHit,maxHit) );
       if(useGEMs_) h_GEMhits_eta.push_back( ibooker.bookProfile("GEMhits_eta","mean # GEM hits vs eta",nint,min,max,nintHit,minHit,maxHit) );
+      if(useME0s_) h_ME0hits_eta.push_back( ibooker.bookProfile("ME0hits_eta","mean # ME0 hits vs eta",nint,min,max,nintHit,minHit,maxHit) );
       h_hits_eta.push_back( ibooker.bookProfile("hits_eta","mean #hits vs eta",nint,min,max,nintHit,minHit,maxHit) );
       nhits_vs_phi.push_back( ibooker.book2D("nhits_vs_phi","#hits vs #phi",nintPhi,minPhi,maxPhi,nintHit,minHit,maxHit) );
       h_hits_phi.push_back( ibooker.bookProfile("hits_phi","mean #hits vs #phi",nintPhi,minPhi,maxPhi, nintHit,minHit,maxHit) );
@@ -187,7 +189,7 @@ void MuonTrackValidator::bookHistograms(DQMStore::IBooker& ibooker, edm::Run con
 
       nrecHit_vs_nsimHit_sim2rec.push_back( ibooker.book2D("nrecHit_vs_nsimHit_sim2rec","nrecHit vs nsimHit (Sim2RecAssoc)",nintHit,minHit,maxHit, nintHit,minHit,maxHit ));
       nrecHit_vs_nsimHit_rec2sim.push_back( ibooker.book2D("nrecHit_vs_nsimHit_rec2sim","nrecHit vs nsimHit (Rec2simAssoc)",nintHit,minHit,maxHit, nintHit,minHit,maxHit ));
-      
+
       if (MABH) {
 	h_PurityVsQuality.push_back
 	  (ibooker.book2D("PurityVsQuality","Purity vs Quality (MABH)",20,0.01,1.01,20,0.01,1.01) );
@@ -263,7 +265,7 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 
   edm::Handle<TrackingParticleCollection> TPCollectionHfake ;
   event.getByToken(tp_fake_Token,TPCollectionHfake);
-  
+
   edm::Handle<reco::BeamSpot> recoBeamSpotHandle;
   event.getByToken(bsSrc_Token,recoBeamSpotHandle);
   reco::BeamSpot bs = *recoBeamSpotHandle;
@@ -276,7 +278,7 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
       associator.push_back( theAssociator.product() );
     }
   }
-  
+
   int w=0;
   for (unsigned int ww=0;ww<associators.size();ww++){
     for (unsigned int www=0;www<label.size();www++){
@@ -293,7 +295,7 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 
 	recSimColl.post_insert();
 	simRecColl.post_insert();
-	
+
       }
 
       else {
@@ -307,7 +309,7 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 						 << label[www].label()<<":"
 						 << label[www].instance()<<" with "
 						 << associators[ww].c_str() <<"\n";
-	  
+
 	  LogTrace("MuonTrackValidator") << "Calling associateRecoToSim method" << "\n";
 	  recSimColl=associator[ww]->associateRecoToSim(trackCollection,
 							TPCollectionHfake);
@@ -323,18 +325,18 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 						 << associatormap.process()<<":"
 						 << associatormap.label()<<":"
 						 << associatormap.instance()<<"\n";
-	  
+
 	  Handle<reco::SimToRecoCollection > simtorecoCollectionH;
 	  event.getByToken(simToRecoCollection_Token,simtorecoCollectionH);
 	  simRecColl= *(simtorecoCollectionH.product());
-	  
+
 	  Handle<reco::RecoToSimCollection > recotosimCollectionH;
 	  event.getByToken(recoToSimCollection_Token,recotosimCollectionH);
 	  recSimColl= *(recotosimCollectionH.product());
 	}
-	
+
       }
-      
+
       //
       //fill simulation histograms
       //compute number of tracks per eta interval
@@ -347,15 +349,15 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	double quality = 0.;
 	bool Quality05 = false;
 	bool Quality075 = false;
-	
+
 	TrackingParticleRef tpr(TPCollectionHeff, i);
 	TrackingParticle* tp = const_cast<TrackingParticle*>(tpr.get());
-	
+
 	TrackingParticle::Vector momentumTP;
 	TrackingParticle::Point vertexTP;
 	double dxySim = 0;
 	double dzSim = 0;
-	
+
 	//If the TrackingParticle is collision-like, get the momentum and vertex at production state
 	//and the impact parameters w.r.t. PCA
 	if(parametersDefiner=="LhcParametersDefinerForTP")
@@ -374,7 +376,7 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	else if(parametersDefiner=="CosmicParametersDefinerForTP")
 	  {
 	    edm::LogVerbatim("MuonTrackValidator") <<"TrackingParticle "<< i;
-	    if(! cosmictpSelector(tpr,&bs,event,setup)) continue;	
+	    if(! cosmictpSelector(tpr,&bs,event,setup)) continue;
 	    momentumTP = Cosmic_parametersDefinerTP->momentum(event,setup,tpr);
 	    vertexTP = Cosmic_parametersDefinerTP->vertex(event,setup,tpr);
 	    dxySim = (-vertexTP.x()*sin(momentumTP.phi())+vertexTP.y()*cos(momentumTP.phi()));
@@ -382,14 +384,14 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	                            sqrt(momentumTP.perp2()) * momentumTP.z()/sqrt(momentumTP.perp2());
 	  }
 	edm::LogVerbatim("MuonTrackValidator") <<"--------------------Selected TrackingParticle #"<<tpr.key();
-	edm::LogVerbatim("MuonTrackValidator") <<"momentumTP: pt = "<<sqrt(momentumTP.perp2())<<", pz = "<<momentumTP.z() 
+	edm::LogVerbatim("MuonTrackValidator") <<"momentumTP: pt = "<<sqrt(momentumTP.perp2())<<", pz = "<<momentumTP.z()
 					       <<", \t vertexTP: radius = "<<sqrt(vertexTP.perp2())<<  ",  z = "<<vertexTP.z() <<"\n";
 	st++;
 
 	h_ptSIM[w]->Fill(sqrt(momentumTP.perp2()));
 	h_etaSIM[w]->Fill(momentumTP.eta());
 	h_vertposSIM[w]->Fill(sqrt(vertexTP.perp2()));
-	
+
 	std::vector<std::pair<RefToBase<Track>, double> > rt;
 	if(simRecColl.find(tpr) != simRecColl.end()){
 	  rt = (std::vector<std::pair<RefToBase<Track>, double> >) simRecColl[tpr];
@@ -410,7 +412,7 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	      else if (quality > 0.5) {
 		Quality05 = true;
 	      }
-	    }	
+	    }
 	  }
 	}else{
 	  edm::LogVerbatim("MuonTrackValidator")
@@ -421,14 +423,14 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	    << momentumTP.phi() << " , "
 	    << " NOT associated to any reco::Track" << "\n";
 	}
-	
+
 	for (unsigned int f=0; f<etaintervals[w].size()-1; f++){
 	  if (getEta(momentumTP.eta())>etaintervals[w][f]&&
 	      getEta(momentumTP.eta())<etaintervals[w][f+1]) {
 	    totSIMeta[w][f]++;
 	    if (TP_is_matched) {
 	      totASSeta[w][f]++;
-	      
+
 	      if (MABH) {
 		if (Quality075) {
 		  totASSeta_Quality075[w][f]++;
@@ -441,14 +443,14 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	    }
 	  }
 	} // END for (unsigned int f=0; f<etaintervals[w].size()-1; f++){
-	
+
 	for (unsigned int f=0; f<phiintervals[w].size()-1; f++){
 	  if (momentumTP.phi() > phiintervals[w][f]&&
 	      momentumTP.phi() <phiintervals[w][f+1]) {
 	    totSIM_phi[w][f]++;
 	    if (TP_is_matched) {
 	      totASS_phi[w][f]++;
-	      
+
 	      if (MABH) {
 		if (Quality075) {
 		  totASS_phi_Quality075[w][f]++;
@@ -461,14 +463,14 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	    }
 	  }
 	} // END for (unsigned int f=0; f<phiintervals[w].size()-1; f++){
-	
+
 	for (unsigned int f=0; f<pTintervals[w].size()-1; f++){
           if (getPt(sqrt(momentumTP.perp2()))>pTintervals[w][f]&&
               getPt(sqrt(momentumTP.perp2()))<pTintervals[w][f+1]) {
             totSIMpT[w][f]++;
 	    if (TP_is_matched) {
 	      totASSpT[w][f]++;
-	      
+
 	      if (MABH) {
 		if (Quality075) {
 		  totASSpT_Quality075[w][f]++;
@@ -481,7 +483,7 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	    }
 	  }
 	} // END for (unsigned int f=0; f<pTintervals[w].size()-1; f++){
-	
+
 	for (unsigned int f=0; f<dxyintervals[w].size()-1; f++){
 	  if (dxySim>dxyintervals[w][f]&&
 	      dxySim<dxyintervals[w][f+1]) {
@@ -491,7 +493,7 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	    }
 	  }
 	} // END for (unsigned int f=0; f<dxyintervals[w].size()-1; f++){
-	
+
 	for (unsigned int f=0; f<dzintervals[w].size()-1; f++){
 	  if (dzSim>dzintervals[w][f]&&
 	      dzSim<dzintervals[w][f+1]) {
@@ -501,7 +503,7 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	    }
 	  }
 	} // END for (unsigned int f=0; f<dzintervals[w].size()-1; f++){
-	
+
 	for (unsigned int f=0; f<vertposintervals[w].size()-1; f++){
 	  if (sqrt(vertexTP.perp2())>vertposintervals[w][f]&&
 	      sqrt(vertexTP.perp2())<vertposintervals[w][f+1]) {
@@ -511,7 +513,7 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	    }
 	  }
 	} // END for (unsigned int f=0; f<vertposintervals[w].size()-1; f++){
-	
+
 	for (unsigned int f=0; f<zposintervals[w].size()-1; f++){
 	  if (vertexTP.z()>zposintervals[w][f]&&
 	      vertexTP.z()<zposintervals[w][f+1]) {
@@ -521,7 +523,7 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	    }
 	  }
 	} // END for (unsigned int f=0; f<zposintervals[w].size()-1; f++){
-	
+
 	int nSimHits = 0;
 	if (usetracker && usemuon) {
 	  nSimHits= tpr.get()->numberOfHits();
@@ -532,21 +534,21 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	else if (usetracker && !usemuon) {
 	  nSimHits=tpr.get()->numberOfTrackerHits();
 	}
-	
+
         int tmp = std::min(nSimHits,int(maxHit-1));
 	edm::LogVerbatim("MuonTrackValidator") << "\t N simhits = "<< nSimHits<<"\n";
-	
+
 	totSIM_hit[w][tmp]++;
 	if (TP_is_matched) totASS_hit[w][tmp]++;
-	
-	if (TP_is_matched)	
+
+	if (TP_is_matched)
 	  {
 	    RefToBase<Track> assoctrack = rt.begin()->first;
 	    nrecHit_vs_nsimHit_sim2rec[w]->Fill( assoctrack->numberOfValidHits(),nSimHits);
 	  }
       } // End for (TrackingParticleCollection::size_type i=0; i<tPCeff.size(); i++){
       if (st!=0) h_tracksSIM[w]->Fill(st);
-      
+
       //
       //fill reconstructed track histograms
       //
@@ -561,24 +563,24 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
         bool Track_is_matched = false;
 	RefToBase<Track> track(trackCollection, i);
 	rT++;
-	
+
 	std::vector<std::pair<TrackingParticleRef, double> > tp;
 	TrackingParticleRef tpr;
 
 	// new logic (bidirectional)
-	if (BiDirectional_RecoToSim_association) {	
+	if (BiDirectional_RecoToSim_association) {
 	  edm::LogVerbatim("MuonTrackValidator")<<"----------------------------------------Track #"<< track.key();
-	  
+
 	  if(recSimColl.find(track) != recSimColl.end()) {
-	    tp = recSimColl[track];	
+	    tp = recSimColl[track];
 	    if (tp.size() != 0) {
-	      tpr = tp.begin()->first;	
+	      tpr = tp.begin()->first;
 	      // RtS and StR must associate the same pair !
 	      if(simRecColl.find(tpr) != simRecColl.end()) {
 		std::vector<std::pair<RefToBase<Track>, double> > track_checkback = simRecColl[tpr];
 		RefToBase<Track> assoc_track_checkback;
 		assoc_track_checkback = track_checkback.begin()->first;
-		
+
 		if ( assoc_track_checkback.key() == track.key() ) {
 		  edm::LogVerbatim("MuonTrackValidator")<<"------------------associated TrackingParticle #"<<tpr.key();
 		  Track_is_matched = true;
@@ -592,7 +594,7 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	      }
 	    }
 	  }
-	  
+
 	  if (!Track_is_matched)
 	    edm::LogVerbatim("MuonTrackValidator")
 	      << "reco::Track #" << track.key() << " with pt=" << track->pt() << " NOT associated to any TrackingParticle" << "\n";
@@ -610,10 +612,10 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	    }
 	  } else {
 	    edm::LogVerbatim("MuonTrackValidator") << "reco::Track #" << track.key() << " with pt=" << track->pt()
-						   << " NOT associated to any TrackingParticle" << "\n";	
+						   << " NOT associated to any TrackingParticle" << "\n";
 	  }
 	}
-	
+
 	//Compute fake rate vs eta
 	for (unsigned int f=0; f<etaintervals[w].size()-1; f++){
 	  if (getEta(track->momentum().eta())>etaintervals[w][f]&&
@@ -634,7 +636,7 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	    }
 	  }
 	} // End for (unsigned int f=0; f<phiintervals[w].size()-1; f++){
-	
+
 	for (unsigned int f=0; f<pTintervals[w].size()-1; f++){
 	  if (getPt(sqrt(track->momentum().perp2()))>pTintervals[w][f]&&
 	      getPt(sqrt(track->momentum().perp2()))<pTintervals[w][f+1]) {
@@ -644,7 +646,7 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	    }
 	  }
 	} // End for (unsigned int f=0; f<pTintervals[w].size()-1; f++){
-	
+
 	for (unsigned int f=0; f<dxyintervals[w].size()-1; f++){
 	  if (track->dxy(bs.position())>dxyintervals[w][f]&&
 	      track->dxy(bs.position())<dxyintervals[w][f+1]) {
@@ -654,7 +656,7 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	    }
 	  }
 	} // End for (unsigned int f=0; f<dxyintervals[w].size()-1; f++){
-	
+
 	for (unsigned int f=0; f<dzintervals[w].size()-1; f++){
 	  if (track->dz(bs.position())>dzintervals[w][f]&&
 	      track->dz(bs.position())<dzintervals[w][f+1]) {
@@ -668,17 +670,17 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	int tmp = std::min((int)track->found(),int(maxHit-1));
 	totREC_hit[w][tmp]++;
 	if (Track_is_matched) totASS2_hit[w][tmp]++;
-	
+
 	edm::LogVerbatim("MuonTrackValidator") << "\t N valid rechits = "<< (int)track->found() <<"\n";
-	
+
 	// Fill other histos
 	TrackingParticle* tpp = const_cast<TrackingParticle*>(tpr.get());
 	// TrackingParticle parameters at point of closest approach to the beamline
 	TrackingParticle::Vector momentumTP;
 	TrackingParticle::Point vertexTP;
-	
+
 	if (parametersDefiner=="LhcParametersDefinerForTP") {
-	  // following reco plots are made only from tracks associated to selected signal TPs 
+	  // following reco plots are made only from tracks associated to selected signal TPs
 	  if (! (Track_is_matched && tpSelector(*tpp)) ) continue;
 	  else {
 	    momentumTP = Lhc_parametersDefinerTP->momentum(event,setup,tpr) ;
@@ -686,14 +688,14 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	  }
 	}
 	else if (parametersDefiner=="CosmicParametersDefinerForTP") {
-	  // following reco plots are made only from tracks associated to selected signal TPs 
+	  // following reco plots are made only from tracks associated to selected signal TPs
 	  if (! (Track_is_matched && cosmictpSelector(tpr,&bs,event,setup)) ) continue;
 	  else {
 	    momentumTP = Cosmic_parametersDefinerTP->momentum(event,setup,tpr) ;
-	    vertexTP = Cosmic_parametersDefinerTP->vertex(event,setup,tpr);	    
+	    vertexTP = Cosmic_parametersDefinerTP->vertex(event,setup,tpr);
 	  }
 	}
-	
+
 	if (associators[ww]=="trackAssociatorByChi2"){
 	  //association chi2
 	  double assocChi2 = -tp.begin()->second;//in association map is stored -chi2
@@ -705,7 +707,7 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	  h_assocFraction[www]->Fill(fraction);
 	  h_assocSharedHit[www]->Fill(fraction*track->numberOfValidHits());
 	}
-	
+
 	//nchi2 and hits global distributions
 	h_nchi2[w]->Fill(track->normalizedChi2());
 	h_nchi2_prob[w]->Fill(TMath::Prob(track->chi2(),(int)track->ndof()));
@@ -713,7 +715,7 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	h_losthits[w]->Fill(track->numberOfLostHits());
 	chi2_vs_nhits[w]->Fill(track->numberOfValidHits(),track->normalizedChi2());
 	h_charge[w]->Fill( track->charge() );
-	
+
 	double ptSim = sqrt(momentumTP.perp2());
 	double qoverpSim = tpr->charge()/sqrt(momentumTP.x()*momentumTP.x()+momentumTP.y()*momentumTP.y()+momentumTP.z()*momentumTP.z());
 	double thetaSim = momentumTP.theta();
@@ -722,10 +724,10 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	double dxySim = (-vertexTP.x()*sin(momentumTP.phi())+vertexTP.y()*cos(momentumTP.phi()));
 	double dzSim = vertexTP.z() - (vertexTP.x()*momentumTP.x()+vertexTP.y()*momentumTP.y()) /
 	                               sqrt(momentumTP.perp2()) * momentumTP.z()/sqrt(momentumTP.perp2());
-	
+
 	// removed unused variable, left this in case it has side effects
 	track->parameters();
-	
+
 	double qoverpRec(0);
 	double qoverpErrorRec(0);
 	double ptRec(0);
@@ -734,26 +736,26 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	double lambdaErrorRec(0);
 	double phiRec(0);
 	double phiErrorRec(0);
-	
+
 	//loop to decide whether to take gsfTrack (utilisation of mode-function) or common track
 	const GsfTrack* gsfTrack(0);
 	if(useGsf){
 	  gsfTrack = dynamic_cast<const GsfTrack*>(&(*track));
 	  if (gsfTrack==0) edm::LogInfo("MuonTrackValidator") << "Trying to access mode for a non-GsfTrack";
 	}
-	
+
 	if (gsfTrack) {
 	  // get values from mode
 	  getRecoMomentum(*gsfTrack, ptRec, ptErrorRec, qoverpRec, qoverpErrorRec,
 			  lambdaRec,lambdaErrorRec, phiRec, phiErrorRec);
 	}
-	
+
 	else {
 	  // get values from track (without mode)
 	  getRecoMomentum(*track, ptRec, ptErrorRec, qoverpRec, qoverpErrorRec,
 			  lambdaRec,lambdaErrorRec, phiRec, phiErrorRec);
 	}
-	
+
 	double thetaRec = track->theta();
 	double ptError = ptErrorRec;
 	double ptres = ptRec - ptSim;
@@ -771,13 +773,13 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	double phiPull=phiDiff/phiErrorRec;
 	double dxyPull=(dxyRec-dxySim)/track->dxyError();
 	double dzPull=(dzRec-dzSim)/track->dzError();
-	
+
 	double contrib_Qoverp = ((qoverpRec-qoverpSim)/qoverpErrorRec)*((qoverpRec-qoverpSim)/qoverpErrorRec)/5;
 	double contrib_dxy = ((dxyRec-dxySim)/track->dxyError())*((dxyRec-dxySim)/track->dxyError())/5;
 	double contrib_dz = ((dzRec-dzSim)/track->dzError())*((dzRec-dzSim)/track->dzError())/5;
 	double contrib_theta = ((lambdaRec-lambdaSim)/lambdaErrorRec)*((lambdaRec-lambdaSim)/lambdaErrorRec)/5;
 	double contrib_phi = (phiDiff/phiErrorRec)*(phiDiff/phiErrorRec)/5;
-	
+
 	edm::LogVerbatim("MuonTrackValidator") << "assocChi2=" << tp.begin()->second << "\n"
 					       << "" << "\n"
 					       << "ptREC=" << ptRec << "\n"
@@ -809,17 +811,17 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 					       << "contrib_phi=" << contrib_phi << "\n"
 					       << "" << "\n"
 					       <<"chi2PULL="<<contrib_Qoverp+contrib_dxy+contrib_dz+contrib_theta+contrib_phi<<"\n";
-	
+
 	h_pullQoverp[w]->Fill(qoverpPull);
 	h_pullTheta[w]->Fill(thetaPull);
 	h_pullPhi[w]->Fill(phiPull);
 	h_pullDxy[w]->Fill(dxyPull);
 	h_pullDz[w]->Fill(dzPull);
-	
+
 	h_pt[w]->Fill(ptres/ptError);
 	h_eta[w]->Fill(etares);
 	etares_vs_eta[w]->Fill(getEta(track->eta()),etares);
-	
+
 	//chi2 and #hit vs eta: fill 2D histos
 	chi2_vs_eta[w]->Fill(getEta(track->eta()),track->normalizedChi2());
 	nhits_vs_eta[w]->Fill(getEta(track->eta()),track->numberOfValidHits());
@@ -827,29 +829,30 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	nCSChits_vs_eta[w]->Fill(getEta(track->eta()),track->hitPattern().numberOfValidMuonCSCHits());
 	nRPChits_vs_eta[w]->Fill(getEta(track->eta()),track->hitPattern().numberOfValidMuonRPCHits());
     if(useGEMs_) nGEMhits_vs_eta[w]->Fill(getEta(track->eta()),track->hitPattern().numberOfValidMuonGEMHits());
+    if(useME0s_) nME0hits_vs_eta[w]->Fill(getEta(track->eta()),track->hitPattern().numberOfValidMuonME0Hits());
 	nlosthits_vs_eta[w]->Fill(getEta(track->eta()),track->numberOfLostHits());
-	
+
 	//resolution of track params: fill 2D histos
 	dxyres_vs_eta[w]->Fill(getEta(track->eta()),dxyRec-dxySim);
 	ptres_vs_eta[w]->Fill(getEta(track->eta()),(ptRec-ptSim)/ptRec);
 	dzres_vs_eta[w]->Fill(getEta(track->eta()),dzRec-dzSim);
 	phires_vs_eta[w]->Fill(getEta(track->eta()),phiDiff);
 	cotThetares_vs_eta[w]->Fill(getEta(track->eta()), cos(thetaRec)/sin(thetaRec) - cos(thetaSim)/sin(thetaSim));
-	
+
 	//same as before but vs pT
 	dxyres_vs_pt[w]->Fill(getPt(ptRec),dxyRec-dxySim);
 	ptres_vs_pt[w]->Fill(getPt(ptRec),(ptRec-ptSim)/ptRec);
 	dzres_vs_pt[w]->Fill(getPt(ptRec),dzRec-dzSim);
 	phires_vs_pt[w]->Fill(getPt(ptRec),phiDiff);
 	cotThetares_vs_pt[w]->Fill(getPt(ptRec), cos(thetaRec)/sin(thetaRec) - cos(thetaSim)/sin(thetaSim));
-	
+
 	//pulls of track params vs eta: fill 2D histos
 	dxypull_vs_eta[w]->Fill(getEta(track->eta()),dxyPull);
 	ptpull_vs_eta[w]->Fill(getEta(track->eta()),ptres/ptError);
 	dzpull_vs_eta[w]->Fill(getEta(track->eta()),dzPull);
 	phipull_vs_eta[w]->Fill(getEta(track->eta()),phiPull);
 	thetapull_vs_eta[w]->Fill(getEta(track->eta()),thetaPull);
-	
+
 	//plots vs phi
 	nhits_vs_phi[w]->Fill(phiRec,track->numberOfValidHits());
 	chi2_vs_phi[w]->Fill(phiRec,track->normalizedChi2());
@@ -860,7 +863,7 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	ptpull_vs_phi[w]->Fill(phiRec,ptres/ptError);
 	phipull_vs_phi[w]->Fill(phiRec,phiPull);
 	thetapull_vs_phi[w]->Fill(phiRec,thetaPull);
-	
+
 	int nSimHits = 0;
 	if (usetracker && usemuon) {
 	  nSimHits= tpr.get()->numberOfHits();
@@ -871,11 +874,11 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 	else if (usetracker && !usemuon) {
 	  nSimHits=tpr.get()->numberOfTrackerHits();
 	}
-	
+
 	nrecHit_vs_nsimHit_rec2sim[w]->Fill(track->numberOfValidHits(), nSimHits);
-	
+
       } // End of for(View<Track>::size_type i=0; i<trackCollectionSize; ++i){
-      
+
       if (at!=0) h_tracks[w]->Fill(at);
       h_fakes[w]->Fill(rT-at);
       edm::LogVerbatim("MuonTrackValidator") << "Total Simulated: " << st << "\n"
@@ -890,11 +893,11 @@ void MuonTrackValidator::analyze(const edm::Event& event, const edm::EventSetup&
 }
 
 void MuonTrackValidator::endRun(Run const&, EventSetup const&) {
-  
+
   int w=0;
   for (unsigned int ww=0;ww<associators.size();ww++){
     for (unsigned int www=0;www<label.size();www++){
-      
+
       //chi2 and #hit vs eta: get mean from 2D histos
       doProfileX(chi2_vs_eta[w],h_chi2meanh[w]);
       doProfileX(nhits_vs_eta[w],h_hits_eta[w]);
@@ -902,7 +905,8 @@ void MuonTrackValidator::endRun(Run const&, EventSetup const&) {
       doProfileX(nCSChits_vs_eta[w],h_CSChits_eta[w]);
       doProfileX(nRPChits_vs_eta[w],h_RPChits_eta[w]);
       if (useGEMs_) doProfileX(nGEMhits_vs_eta[w],h_GEMhits_eta[w]);
-      
+      if (useME0s_) doProfileX(nME0hits_vs_eta[w],h_ME0hits_eta[w]);
+
       doProfileX(nlosthits_vs_eta[w],h_losthits_eta[w]);
       //vs phi
       doProfileX(chi2_vs_nhits[w],h_chi2meanhitsh[w]);
@@ -944,7 +948,7 @@ void MuonTrackValidator::endRun(Run const&, EventSetup const&) {
 
       fillPlotFromVector(h_simulzpos[w],totSIM_zpos[w]);
       fillPlotFromVector(h_assoczpos[w],totASS_zpos[w]);
-      
+
       if (MABH) {
 	fillPlotFromVector(h_assoceta_Quality05[w] ,totASSeta_Quality05[w]);
 	fillPlotFromVector(h_assoceta_Quality075[w],totASSeta_Quality075[w]);
@@ -953,11 +957,11 @@ void MuonTrackValidator::endRun(Run const&, EventSetup const&) {
 	fillPlotFromVector(h_assocphi_Quality05[w] ,totASS_phi_Quality05[w]);
 	fillPlotFromVector(h_assocphi_Quality075[w],totASS_phi_Quality075[w]);
       }
-      
+
       w++;
     }
   }
-  
+
   if ( out.size() != 0 && dbe_ ) dbe_->save(out);
 }
 
@@ -984,5 +988,5 @@ void MuonTrackValidator::getRecoMomentum (const reco::GsfTrack& gsfTrack,
   lambda = gsfTrack.lambdaMode();
   lambdaError = gsfTrack.lambdaModeError();
   phi = gsfTrack.phiMode();
-  phiError = gsfTrack.phiModeError(); 
+  phiError = gsfTrack.phiModeError();
 }

@@ -34,14 +34,15 @@ muonTrackValidator = cms.EDAnalyzer("MuonTrackValidator",
     # collision-like tracks
     parametersDefiner = cms.string('LhcParametersDefinerForTP'),
     # cosmics tracks
-    # parametersDefiner = cms.string('CosmicParametersDefinerForTP'), 
+    # parametersDefiner = cms.string('CosmicParametersDefinerForTP'),
     #
     # map linking SimHits to TrackingParticles, needed for cosmics validation`
-    simHitTpMapTag = cms.InputTag("simHitTPAssocProducer"), 
+    simHitTpMapTag = cms.InputTag("simHitTPAssocProducer"),
     #
-    # if *not* uses associators, the TP-RecoTrack maps has to be specified 
+    # if *not* uses associators, the TP-RecoTrack maps has to be specified
     UseAssociators = cms.bool(False),
     useGEMs = cms.bool(False),
+    useME0s = cms.bool(False),
     associators = cms.vstring('a_MuonAssociator'),
     associatormap = cms.InputTag("tpToMuonTrackAssociation"),
     #
@@ -51,45 +52,45 @@ muonTrackValidator = cms.EDAnalyzer("MuonTrackValidator",
     BiDirectional_RecoToSim_association = cms.bool(True),
     #
     # Output File / Directory
-    outputFile = cms.string(''),           
+    outputFile = cms.string(''),
     dirName = cms.string('Muons/RecoMuonV/MultiTrack/'),
     #
-    # Parameters for plots                                    
+    # Parameters for plots
     useFabsEta = cms.bool(False),
     min = cms.double(-2.5),
     max = cms.double(2.5),
     nint = cms.int32(50),
     #
-    ptRes_nbin = cms.int32(100),                                   
+    ptRes_nbin = cms.int32(100),
     ptRes_rangeMin = cms.double(-0.3),
     ptRes_rangeMax = cms.double(0.3),
     #
-    phiRes_nbin = cms.int32(100),                                   
+    phiRes_nbin = cms.int32(100),
     phiRes_rangeMin = cms.double(-0.05),
     phiRes_rangeMax = cms.double(0.05),
     #
     etaRes_rangeMin = cms.double(-0.05),
     etaRes_rangeMax = cms.double(0.05),
     #
-    cotThetaRes_nbin = cms.int32(120),                                   
+    cotThetaRes_nbin = cms.int32(120),
     cotThetaRes_rangeMin = cms.double(-0.01),
     cotThetaRes_rangeMax = cms.double(0.01),
     #
-    dxyRes_nbin = cms.int32(100),                                   
+    dxyRes_nbin = cms.int32(100),
     dxyRes_rangeMin = cms.double(-0.02),
     dxyRes_rangeMax = cms.double(0.02),
     #
-    dzRes_nbin = cms.int32(150),                                   
+    dzRes_nbin = cms.int32(150),
     dzRes_rangeMin = cms.double(-0.05),
     dzRes_rangeMax = cms.double(0.05),
-    # 
+    #
     minpT = cms.double(0.1),
     maxpT = cms.double(1500),
     nintpT = cms.int32(40),
     useLogPt=cms.untracked.bool(False),
     useInvPt = cms.bool(False),
-    #                               
-    minHit = cms.double(-0.5),                            
+    #
+    minHit = cms.double(-0.5),
     maxHit = cms.double(74.5),
     nintHit = cms.int32(75),
     #
@@ -116,3 +117,4 @@ muonTrackValidator = cms.EDAnalyzer("MuonTrackValidator",
 
 from Configuration.StandardSequences.Eras import eras
 eras.run3_GEM.toModify( muonTrackValidator, useGEMs = cms.bool(True) )
+eras.phase2_muon.toModify( muonTrackValidator, useME0s = cms.bool(True) )
