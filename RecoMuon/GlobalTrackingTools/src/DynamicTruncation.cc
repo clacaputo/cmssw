@@ -484,7 +484,9 @@ void DynamicTruncation::correctThrByPAndEta(double& thr) {
       return thr50 * ( 1 + p0*p_reco + std::pow( this->p_reco, p1));
     };
 
-    thr = parametricThreshold();
+    std::set<dyt_utils::etaRegion> regionsToExclude = {dyt_utils::etaRegion::eta2p0,dyt_utils::etaRegion::eta2p2, dyt_utils::etaRegion::eta2p4 };
+
+    if ( ! regionsToExclude.count(this->region) ) thr = parametricThreshold();
 }
 
 void DynamicTruncation::setEtaRegion(){

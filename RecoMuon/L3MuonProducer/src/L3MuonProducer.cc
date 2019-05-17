@@ -220,7 +220,7 @@ void L3MuonProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptio
       psd1.add<int>("DYTselector",1);
       psd1.add<bool>("DYTupdator", false);
       psd1.add<bool>("DYTuseAPE", false );
-      psd1.add<bool>("DYTuseThrsParametrization", false);
+      psd1.add<bool>("DYTuseThrsParametrization", true);
       {
         edm::ParameterSetDescription psd2;
         psd2.add<std::vector<double>>("eta0p8", {1,-0.919853, 0.990742});
