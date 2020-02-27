@@ -4,6 +4,8 @@ inclusiveVertexFinder  = cms.EDProducer("InclusiveVertexFinder",
        beamSpot = cms.InputTag("offlineBeamSpot"),
        primaryVertices = cms.InputTag("offlinePrimaryVertices"),
        tracks = cms.InputTag("generalTracks"),
+       muons = cms.InputTag("slimmedMuons"),
+       useObjectForSeeding = cms.bool(False),
        minHits = cms.uint32(8),
        maximumLongitudinalImpactParameter = cms.double(0.3),
        minPt = cms.double(0.8),
@@ -16,7 +18,7 @@ inclusiveVertexFinder  = cms.EDProducer("InclusiveVertexFinder",
            seedMin3DIPValue = cms.double(0.005),
            clusterMaxDistance = cms.double(0.05), #500um
            clusterMaxSignificance = cms.double(4.5), #4.5 sigma
-           distanceRatio = cms.double(20), # was cluster scale = 1 / density factor =0.05 
+           distanceRatio = cms.double(20), # was cluster scale = 1 / density factor =0.05
            clusterMinAngleCosine = cms.double(0.5), # only forward decays
        ),
 
@@ -37,5 +39,3 @@ inclusiveVertexFinder  = cms.EDProducer("InclusiveVertexFinder",
 
 
 )
-
-
