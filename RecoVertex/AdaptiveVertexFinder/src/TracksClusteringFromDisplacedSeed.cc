@@ -127,62 +127,88 @@ return clusters;
 std::vector<TracksClusteringFromDisplacedSeed::Cluster> TracksClusteringFromDisplacedSeed::clusters(
 	 const reco::Vertex &pv,
 	 const std::vector<reco::TransientTrack> & selectedTracks,
-	 const pat::MuonCollection & muons
+	 const pat::MuonCollection & muons,
+   const pat::ElectronCollection & electrons
  ){
 
 	 using namespace reco;
 	 std::vector<TransientTrack> seeds;
 
-   for (auto& ttrack: selectedTracks){
+	 for (auto& ttrack: selectedTracks){
 		 double tt_pt = ttrack.track().pt();
+		 double tt_eta = ttrack.track().eta();
+     std::pair<bool,Measurement1D> ip = IPTools::absoluteImpactParameter3D(ttrack,pv);
+     bool muon_match = false;
+     bool ele_match = false;
 
-     for(auto& muon: muons){
-			const pat::PackedCandidate* cand = dynamic_cast<const pat::PackedCandidate*>(muon.sourceCandidatePtr(0).get());
-			if(!cand) continue;
+     for(auto& electron: electrons){
+       for(edm::Ref<pat::PackedCandidateCollection> cand : electron.associatedPackedPFCandidates()){
+    		 if(!cand || !(cand->bestTrack()) ) continue;
+    		 double pseudoTrack_pt = cand->bestTrack()->pt();
+    		 double pseudoTrack_eta = cand->bestTrack()->eta();
 
-			double pseudoTrack_pt = cand->pseudoTrack().pt();
-			if(tt_pt == pseudoTrack_pt){
-				std::pair<bool,Measurement1D> ip = IPTools::absoluteImpactParameter3D(ttrack,pv);
-				if(ip.first && ip.second.value() >= min3DIPValue && ip.second.significance() >= min3DIPSignificance && ip.second.value() <= max3DIPValue && ip.second.significance() <= max3DIPSignificance)
-					{
-						std::cout << "new seed ref " << ttrack.trackBaseRef().key()  << " " << ip.second.value() << " " << ip.second.significance()
-						          << " " << ttrack.track().hitPattern().trackerLayersWithMeasurement() << " " << ttrack.track().pt()
-											<< " " << ttrack.track().eta() << std::endl;
-						seeds.push_back(ttrack);
-					}
-#ifdef VTXDEBUG
-			 std::cout<<"\t Track pt: "<<(ttrack.track().pt())
-			          <<"\t Track eta: "<<(ttrack.track().eta())
-								<<"\t Track phi: "<<(ttrack.track().phi())
-								<<"\t Track reference: "<<(&ttrack.track())<<std::endl;
-       std::cout<<"\t\tMuon Track pt: "<<cand->pseudoTrack().pt()
-			          <<"\t\tMuon Track eta: "<<cand->pseudoTrack().eta()
-								<<"\t\tMuon Track phi: "<<cand->pseudoTrack().phi()
-								<<"\t\tMuon Track pseudoRef: "<<(&cand->pseudoTrack())
-								<<"\t\tMuon Track reference: "<<muon.track().get()<<std::endl;
-#endif
-			}
+  		   float dpt = fabs(tt_pt - pseudoTrack_pt);
+  		   float deta = fabs(tt_eta - pseudoTrack_eta);
+
+  		 if(ip.first && ip.second.value() >= min3DIPValue && ip.second.significance() >= min3DIPSignificance &&
+  				ip.second.value() <= max3DIPValue && ip.second.significance() <= max3DIPSignificance &&
+  			  (dpt < 0.001 && deta < 0.001 && cand->charge()!=0) ){
+
+
+  	         #ifdef VTXDEBUG
+             std::cout << "--- Electron PF track pt: "<< pseudoTrack_pt << "  Electron PF track eta: "<< pseudoTrack_eta << std::endl;
+             std::cout << "---- Track pt: " << tt_pt  << " Track eta: " << tt_eta << std::endl;
+             std::cout << "new seed ref " << ttrack.trackBaseRef().key()  << " " << ip.second.value() << " " << ip.second.significance()
+             << " " << ttrack.track().hitPattern().trackerLayersWithMeasurement() << std::endl;
+             #endif
+             ele_match = true;
+           }
+         }
+       }
+
+       for(auto& muon: muons){
+
+         const pat::PackedCandidate* cand = dynamic_cast<const pat::PackedCandidate*>(muon.sourceCandidatePtr(0).get());
+         if(!cand || !(cand->bestTrack()) ) continue;
+         double pseudoTrack_pt = cand->bestTrack()->pt();
+         double pseudoTrack_eta = cand->bestTrack()->eta();
+
+         float dpt = fabs(tt_pt - pseudoTrack_pt);
+  		   float deta = fabs(tt_eta - pseudoTrack_eta);
+
+         if(ip.first && ip.second.value() >= min3DIPValue && ip.second.significance() >= min3DIPSignificance &&
+    				ip.second.value() <= max3DIPValue && ip.second.significance() <= max3DIPSignificance &&
+    			  (dpt < 0.001 && deta < 0.001) ){
+
+    	         #ifdef VTXDEBUG
+               std::cout << "--- Muon PF track pt: " << pseudoTrack_pt << "  Muon PF track eta: "<< pseudoTrack_eta << std::endl;
+               std::cout << "---- Track pt: " << tt_pt  << " Track eta: " << tt_eta << std::endl;
+               std::cout << "new seed ref " << it->trackBaseRef().key()  << " " << ip.second.value() << " " << ip.second.significance()
+               << " " << it->track().hitPattern().trackerLayersWithMeasurement() << std::endl;
+               #endif
+               muon_match = true;
+             }
+       }
+       if (ele_match || muon_match) seeds.push_back(ttrack);
      }
-   }
+
+
 
 	 std::vector< Cluster > clusters;
 	 int i = 0;
-for(std::vector<TransientTrack>::const_iterator s = seeds.begin();
- s != seeds.end(); ++s, ++i)
-	 {
-#ifdef VTXDEBUG
-std::cout << "Seed N. "<<i <<   std::endl;
-#endif // VTXDEBUG
+	 for(std::vector<TransientTrack>::const_iterator s = seeds.begin(); s != seeds.end(); ++s, ++i){
+		 #ifdef VTXDEBUG
+		 std::cout << "Seed N. "<<i <<   std::endl;
+		 #endif // VTXDEBUG
 		 std::pair<std::vector<reco::TransientTrack>,GlobalPoint>  ntracks = nearTracks(*s,selectedTracks,pv);
-//	        std::cout << ntracks.first.size() << " " << ntracks.first.size()  << std::endl;
-//                if(ntracks.first.size() == 0 || ntracks.first.size() > maxNTracks ) continue;
-					 ntracks.first.push_back(*s);
+		 //std::cout << ntracks.first.size() << " " << ntracks.first.size()  << std::endl;
+		 //if(ntracks.first.size() == 0 || ntracks.first.size() > maxNTracks ) continue;
+		 ntracks.first.push_back(*s);
 		 Cluster aCl;
-					 aCl.seedingTrack = *s;
-					 aCl.seedPoint = ntracks.second;
+		 aCl.seedingTrack = *s;
+		 aCl.seedPoint = ntracks.second;
 		 aCl.tracks = ntracks.first;
-					 clusters.push_back(aCl);
-	}
-
-return clusters;
- }
+		 clusters.push_back(aCl);
+	 }
+	 return clusters;
+}

@@ -16,6 +16,7 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
+#include "DataFormats/PatCandidates/interface/Electron.h"
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
@@ -40,12 +41,13 @@ class TracksClusteringFromDisplacedSeed {
 	  const std::vector<reco::TransientTrack> & selectedTracks
 	 );
 
-   std::vector<Cluster> clusters(
-const reco::Vertex    &pv,
-const std::vector<reco::TransientTrack> & selectedTracks,
-const pat::MuonCollection & muons
 
-);
+std::vector<Cluster> clusters(
+	 const reco::Vertex &pv,
+	 const std::vector<reco::TransientTrack> & selectedTracks,
+	 const pat::MuonCollection & muons,
+   const pat::ElectronCollection & electrons
+ );
 
 
     private:

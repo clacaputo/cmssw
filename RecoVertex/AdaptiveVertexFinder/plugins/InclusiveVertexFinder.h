@@ -18,6 +18,7 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
+#include "DataFormats/PatCandidates/interface/Electron.h"
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
 #include "RecoVertex/ConfigurableVertexReco/interface/ConfigurableVertexReconstructor.h"
@@ -50,6 +51,7 @@ private:
   edm::EDGetTokenT<reco::VertexCollection> token_primaryVertex;
   edm::EDGetTokenT<InputContainer>	token_tracks;
   edm::EDGetTokenT<pat::MuonCollection>	token_muons;
+  edm::EDGetTokenT<pat::ElectronCollection>	token_electrons;
   bool useObjectCollection;
   unsigned int				minHits;
   unsigned int				maxNTracks;
@@ -90,6 +92,7 @@ TemplatedInclusiveVertexFinder<InputContainer,VTX>::TemplatedInclusiveVertexFind
 	token_primaryVertex = consumes<reco::VertexCollection>(params.getParameter<edm::InputTag>("primaryVertices"));
 	token_tracks = consumes<InputContainer>(params.getParameter<edm::InputTag>("tracks"));
   token_muons = consumes<pat::MuonCollection>(params.getParameter<edm::InputTag>("muons"));
+  token_electrons = consumes<pat::ElectronCollection>(params.getParameter<edm::InputTag>("electrons"));
 	produces<Product>();
 	//produces<reco::VertexCollection>("multi");
 }
@@ -130,6 +133,10 @@ void TemplatedInclusiveVertexFinder<InputContainer,VTX>::produce(edm::Event &eve
   event.getByToken(token_muons, muonsHandle);
   const pat::MuonCollection *muons = muonsHandle.product();
 
+  edm::Handle<pat::ElectronCollection> electronsHandle;
+  event.getByToken(token_electrons, electronsHandle);
+  const pat::ElectronCollection *electrons = electronsHandle.product();
+
   edm::ESHandle<TransientTrackBuilder> trackBuilder;
   es.get<TransientTrackRecord>().get("TransientTrackBuilder", trackBuilder);
 
@@ -155,7 +162,7 @@ void TemplatedInclusiveVertexFinder<InputContainer,VTX>::produce(edm::Event &eve
 
     std::vector<TracksClusteringFromDisplacedSeed::Cluster> clusters;
     // We could modify clusterizer such as it will use as seeds only muons or electrons tracks
-    if(useObjectCollection) clusters = clusterizer->clusters(pv,tts, *muons);
+    if(useObjectCollection) clusters = clusterizer->clusters(pv,tts, *muons, *electrons);//clusters = clusterizer->clusters(pv,tts, *muons);
     else clusters = clusterizer->clusters(pv,tts);
 
     //Create BS object from PV to feed in the AVR
