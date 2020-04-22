@@ -17,6 +17,8 @@
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
+#include "DataFormats/PatCandidates/interface/Muon.h"
+#include "DataFormats/PatCandidates/interface/Electron.h"
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
 #include "RecoVertex/ConfigurableVertexReco/interface/ConfigurableVertexReconstructor.h"
@@ -56,8 +58,11 @@ class TemplatedInclusiveVertexFinder : public edm::stream::EDProducer<> {
             pdesc.add<unsigned int>("minHits",0);
           } else {
             pdesc.add<edm::InputTag>("tracks",edm::InputTag("generalTracks"));
-          }	  
-	  
+          }
+	  pdesc.add<edm::InputTag>("muons",edm::InputTag("slimmedMuons"));
+    pdesc.add<edm::InputTag>("electrons",edm::InputTag("slimmedElectrons"));
+    pdesc.add<bool>("useObjectForSeeding",false);
+
 	  pdesc.add<double>("maximumLongitudinalImpactParameter",0.3);
 	  pdesc.add<double>("maximumTimeSignificance",3.0);
 	  pdesc.add<double>("minPt",0.8);
@@ -105,9 +110,12 @@ class TemplatedInclusiveVertexFinder : public edm::stream::EDProducer<> {
 	bool trackFilter(const reco::Track &track) const;
         std::pair<std::vector<reco::TransientTrack>,GlobalPoint> nearTracks(const reco::TransientTrack &seed, const std::vector<reco::TransientTrack> & tracks, const reco::Vertex & primaryVertex) const;
 
-	edm::EDGetTokenT<reco::BeamSpot> 	token_beamSpot; 
+	edm::EDGetTokenT<reco::BeamSpot> 	token_beamSpot;
 	edm::EDGetTokenT<reco::VertexCollection> token_primaryVertex;
-	edm::EDGetTokenT<InputContainer>	token_tracks; 
+	edm::EDGetTokenT<InputContainer>	token_tracks;
+  edm::EDGetTokenT<pat::MuonCollection>	token_muons;
+  edm::EDGetTokenT<pat::ElectronCollection>	token_electrons;
+  bool useObjectCollection;
 	unsigned int				minHits;
 	unsigned int				maxNTracks;
 	double					maxLIP;
@@ -127,7 +135,8 @@ class TemplatedInclusiveVertexFinder : public edm::stream::EDProducer<> {
 };
 template <class InputContainer, class VTX>
 TemplatedInclusiveVertexFinder<InputContainer,VTX>::TemplatedInclusiveVertexFinder(const edm::ParameterSet &params) :
-	minHits(params.getParameter<unsigned int>("minHits")),
+  useObjectCollection(params.getParameter<bool>("useObjectForSeeding")),
+  minHits(params.getParameter<unsigned int>("minHits")),
 	maxNTracks(params.getParameter<unsigned int>("maxNTracks")),
        	maxLIP(params.getParameter<double>("maximumLongitudinalImpactParameter")),
 	maxTimeSig(params.getParameter<double>("maximumTimeSignificance")),
@@ -147,7 +156,9 @@ TemplatedInclusiveVertexFinder<InputContainer,VTX>::TemplatedInclusiveVertexFind
 	token_beamSpot = consumes<reco::BeamSpot>(params.getParameter<edm::InputTag>("beamSpot"));
 	token_primaryVertex = consumes<reco::VertexCollection>(params.getParameter<edm::InputTag>("primaryVertices"));
 	token_tracks = consumes<InputContainer>(params.getParameter<edm::InputTag>("tracks"));
-	produces<Product>();
+  token_muons = consumes<pat::MuonCollection>(params.getParameter<edm::InputTag>("muons"));
+  token_electrons = consumes<pat::ElectronCollection>(params.getParameter<edm::InputTag>("electrons"));
+  produces<Product>();
 	//produces<reco::VertexCollection>("multi");
 }
 template <class InputContainer, class VTX>
@@ -157,7 +168,7 @@ bool TemplatedInclusiveVertexFinder<InputContainer,VTX>::trackFilter(const reco:
 		return false;
 	if (track.pt() < minPt )
 		return false;
- 
+
 	return true;
 }
 
@@ -186,6 +197,14 @@ void TemplatedInclusiveVertexFinder<InputContainer,VTX>::produce(edm::Event &eve
 	edm::Handle<InputContainer> tracks;
 	event.getByToken(token_tracks, tracks);
 
+  edm::Handle<pat::MuonCollection> muonsHandle;
+  event.getByToken(token_muons, muonsHandle);
+  const pat::MuonCollection *muons = muonsHandle.product();
+
+  edm::Handle<pat::ElectronCollection> electronsHandle;
+  event.getByToken(token_electrons, electronsHandle);
+  const pat::ElectronCollection *electrons = electronsHandle.product();
+
 	edm::ESHandle<TransientTrackBuilder> trackBuilder;
 	es.get<TransientTrackRecord>().get("TransientTrackBuilder",
 	                                   trackBuilder);
@@ -193,12 +212,12 @@ void TemplatedInclusiveVertexFinder<InputContainer,VTX>::produce(edm::Event &eve
 
         auto recoVertices = std::make_unique<Product>();
         if(primaryVertices->size()!=0) {
-     
+
 	const reco::Vertex &pv = (*primaryVertices)[0];
 	GlobalPoint ppv(pv.position().x(),pv.position().y(),pv.position().z());
-        
+
 	std::vector<TransientTrack> tts;
-        //Fill transient track vector 
+        //Fill transient track vector
 	for(typename InputContainer::const_iterator track = tracks->begin();
 	    track != tracks->end(); ++track) {
 //TransientTrack tt = trackBuilder->build(ref);
@@ -217,7 +236,10 @@ void TemplatedInclusiveVertexFinder<InputContainer,VTX>::produce(edm::Event &eve
 		tt.setBeamSpot(*beamSpot);
 		tts.push_back(tt);
 	}
-        std::vector<TracksClusteringFromDisplacedSeed::Cluster> clusters = clusterizer->clusters(pv,tts);
+    std::vector<TracksClusteringFromDisplacedSeed::Cluster> clusters;
+    // We could modify clusterizer such as it will use as seeds only muons or electrons tracks
+    if(useObjectCollection) clusters = clusterizer->clusters(pv,tts, *muons, *electrons);//clusters = clusterizer->clusters(pv,tts, *muons);
+    else clusters = clusterizer->clusters(pv,tts);
 
         //Create BS object from PV to feed in the AVR
 	BeamSpot::CovarianceMatrix cov;
@@ -235,13 +257,13 @@ void TemplatedInclusiveVertexFinder<InputContainer,VTX>::produce(edm::Event &eve
         int i=0;
 #ifdef VTXDEBUG
 
-	std::cout <<  "CLUSTERS " << clusters.size() << std::endl; 
+	std::cout <<  "CLUSTERS " << clusters.size() << std::endl;
 #endif
 
 	for(std::vector<TracksClusteringFromDisplacedSeed::Cluster>::iterator cluster = clusters.begin();
 	    cluster != clusters.end(); ++cluster,++i)
         {
-                if(cluster->tracks.size() < 2 || cluster->tracks.size() > maxNTracks ) 
+                if(cluster->tracks.size() < 2 || cluster->tracks.size() > maxNTracks )
 		     continue;
 	 	std::vector<TransientVertex> vertices;
 		if(useVertexReco) {
@@ -253,10 +275,10 @@ void TemplatedInclusiveVertexFinder<InputContainer,VTX>::produce(edm::Event &eve
 			if(singleFitVertex.isValid())
 				vertices.push_back(singleFitVertex);
 		}
-		
+
 		// for each transient vertex state determine if a time can be measured and fill covariance
 		if( pv.covariance(3,3) > 0. ) {
-		  for(auto& vtx : vertices) {		  
+		  for(auto& vtx : vertices) {
 		    svhelper::updateVertexTime(vtx);
 		  }
 		}
@@ -273,7 +295,7 @@ void TemplatedInclusiveVertexFinder<InputContainer,VTX>::produce(edm::Event &eve
 			std::cout << " pos: " << vv.position() << " error: " <<vv.xError() << " " << vv.yError() << " " << vv.zError() << std::endl;
 			std::cout << " time: " << vv.time() << " error: " << vv.tError() << std::endl;
 #endif
-			GlobalVector dir;  
+			GlobalVector dir;
 			std::vector<reco::TransientTrack> ts = v->originalTracks();
 			for(std::vector<reco::TransientTrack>::const_iterator i = ts.begin();
 					i != ts.end(); ++i) {
@@ -291,23 +313,23 @@ void TemplatedInclusiveVertexFinder<InputContainer,VTX>::produce(edm::Event &eve
 			if(dlen.significance() > vertexMinDLenSig  &&
 			   ( (vertexMinAngleCosine > 0) ? (vscal > vertexMinAngleCosine) : (vscal < vertexMinAngleCosine) )
 			   &&  v->normalisedChiSquared() < 10 && dlen2.significance() > vertexMinDLen2DSig)
-			{	 
+			{
 				recoVertices->push_back(*v);
 
 #ifdef VTXDEBUG
 	                        std::cout << "ADDED" << std::endl;
 #endif
                         }
-                      
+
                    }
         }
 #ifdef VTXDEBUG
 
         std::cout <<  "Final put  " << recoVertices->size() << std::endl;
-#endif  
+#endif
         }
- 
+
 	event.put(std::move(recoVertices));
 
 }
-#endif 
+#endif

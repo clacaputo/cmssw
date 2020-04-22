@@ -15,7 +15,7 @@ TracksClusteringFromDisplacedSeed::TracksClusteringFromDisplacedSeed(const edm::
 	maxTimeSignificance(params.getParameter<double>("maxTimeSignificance"))
 
 {
-	
+
 }
 
 std::pair<std::vector<reco::TransientTrack>,GlobalPoint> TracksClusteringFromDisplacedSeed::nearTracks(const reco::TransientTrack &seed, const std::vector<reco::TransientTrack> & tracks, const  reco::Vertex & primaryVertex) const
@@ -39,11 +39,11 @@ std::pair<std::vector<reco::TransientTrack>,GlobalPoint> TracksClusteringFromDis
 	         GlobalPoint seedPosition     = dist.points().second;
 	         GlobalError seedPositionErr  = seed.impactPointState().cartesianError().position();
                  Measurement1D m = distanceComputer.distance(VertexState(seedPosition,seedPositionErr), VertexState(ttPoint, ttPointErr));
-                 GlobalPoint cp(dist.crossingPoint()); 
+                 GlobalPoint cp(dist.crossingPoint());
 
 		 double timeSig = 0.;
-		 if( primaryVertex.covariance(3,3) > 0. && 
-		     edm::isFinite(seed.timeExt()) && edm::isFinite(tt->timeExt()) ) { 
+		 if( primaryVertex.covariance(3,3) > 0. &&
+		     edm::isFinite(seed.timeExt()) && edm::isFinite(tt->timeExt()) ) {
 		   // apply only if time available and being used in vertexing
 		   const double tError = std::sqrt( std::pow(seed.dtErrorExt(),2) + std::pow(tt->dtErrorExt(),2) );
 		   timeSig = std::abs( seed.timeExt() - tt->timeExt() ) / tError;
@@ -51,15 +51,15 @@ std::pair<std::vector<reco::TransientTrack>,GlobalPoint> TracksClusteringFromDis
 
                  float distanceFromPV =  (dist.points().second-pv).mag();
                  float distance = dist.distance();
-		 GlobalVector trackDir2D(tt->impactPointState().globalDirection().x(),tt->impactPointState().globalDirection().y(),0.); 
-		 GlobalVector seedDir2D(seed.impactPointState().globalDirection().x(),seed.impactPointState().globalDirection().y(),0.); 
+		 GlobalVector trackDir2D(tt->impactPointState().globalDirection().x(),tt->impactPointState().globalDirection().y(),0.);
+		 GlobalVector seedDir2D(seed.impactPointState().globalDirection().x(),seed.impactPointState().globalDirection().y(),0.);
 		 //SK:UNUSED//    float dotprodTrackSeed2D = trackDir2D.unit().dot(seedDir2D.unit());
 
                  float dotprodTrack = (dist.points().first-pv).unit().dot(tt->impactPointState().globalDirection().unit());
                  float dotprodSeed = (dist.points().second-pv).unit().dot(seed.impactPointState().globalDirection().unit());
 
                  float w = distanceFromPV*distanceFromPV/(pvDistance*distance);
-          	 bool selected = (m.significance() < clusterMaxSignificance && 
+          	 bool selected = (m.significance() < clusterMaxSignificance &&
 				  ((clusterMinAngleCosine > 0) ? (dotprodSeed > clusterMinAngleCosine) : (dotprodSeed < clusterMinAngleCosine)) && //Angles between PV-PCAonSeed vectors and seed directions
 				  ((clusterMinAngleCosine > 0) ? (dotprodTrack > clusterMinAngleCosine) : (dotprodTrack < clusterMinAngleCosine)) && //Angles between PV-PCAonTrack vectors and track directions
 				  //dotprodTrackSeed2D > clusterMinAngleCosine && //Angle between track and seed
@@ -69,18 +69,18 @@ std::pair<std::vector<reco::TransientTrack>,GlobalPoint> TracksClusteringFromDis
 				  timeSig < maxTimeSignificance);  // absolute distance cut
 
 #ifdef VTXDEBUG
-            	    std::cout << tt->trackBaseRef().key() << " :  " << (selected?"+":" ")<< " " << m.significance() << " < " << clusterMaxSignificance <<  " &&  " << 
-                    dotprodSeed  << " > " <<  clusterMinAngleCosine << "  && " << 
-                    dotprodTrack  << " > " <<  clusterMinAngleCosine << "  && " << 
-                    dotprodTrackSeed2D  << " > " <<  clusterMinAngleCosine << "  &&  "  << 
-                    distance*distanceRatio  << " < " <<  distanceFromPV << "  crossingtoPV: " << distanceFromPV << " dis*scal " <<  distance*distanceRatio << "  <  " << distanceFromPV << " dist: " << distance << " < " << clusterMaxDistance << 
+            	    std::cout << tt->trackBaseRef().key() << " :  " << (selected?"+":" ")<< " " << m.significance() << " < " << clusterMaxSignificance <<  " &&  " <<
+                    dotprodSeed  << " > " <<  clusterMinAngleCosine << "  && " <<
+                    dotprodTrack  << " > " <<  clusterMinAngleCosine << "  && " <<
+                    dotprodTrackSeed2D  << " > " <<  clusterMinAngleCosine << "  &&  "  <<
+                    distance*distanceRatio  << " < " <<  distanceFromPV << "  crossingtoPV: " << distanceFromPV << " dis*scal " <<  distance*distanceRatio << "  <  " << distanceFromPV << " dist: " << distance << " < " << clusterMaxDistance <<
 			      << "timeSig: " << timeSig << std::endl; // cut scaling with track density
-#endif           
+#endif
                  if(selected)
                  {
                      result.push_back(*tt);
-                     seedingPoint = GlobalPoint(cp.x()*w+seedingPoint.x(),cp.y()*w+seedingPoint.y(),cp.z()*w+seedingPoint.z());  
-                     sumWeights+=w; 
+                     seedingPoint = GlobalPoint(cp.x()*w+seedingPoint.x(),cp.y()*w+seedingPoint.y(),cp.z()*w+seedingPoint.z());
+                     sumWeights+=w;
                  }
             }
        }
@@ -104,13 +104,13 @@ std::vector<TracksClusteringFromDisplacedSeed::Cluster> TracksClusteringFromDisp
 	for(std::vector<TransientTrack>::const_iterator it = selectedTracks.begin(); it != selectedTracks.end(); it++){
                 std::pair<bool,Measurement1D> ip = IPTools::absoluteImpactParameter3D(*it,pv);
                 if(ip.first && ip.second.value() >= min3DIPValue && ip.second.significance() >= min3DIPSignificance && ip.second.value() <= max3DIPValue && ip.second.significance() <= max3DIPSignificance)
-                  { 
+                  {
 #ifdef VTXDEBUG
                     std::cout << "new seed " <<  it-selectedTracks.begin() << " ref " << it->trackBaseRef().key()  << " " << ip.second.value() << " " << ip.second.significance() << " " << it->track().hitPattern().trackerLayersWithMeasurement() << " " << it->track().pt() << " " << it->track().eta() << std::endl;
 #endif
-                    seeds.push_back(*it);  
+                    seeds.push_back(*it);
                   }
- 
+
 	}
 
         std::vector< Cluster > clusters;
@@ -126,12 +126,100 @@ std::vector<TracksClusteringFromDisplacedSeed::Cluster> TracksClusteringFromDisp
 //                if(ntracks.first.size() == 0 || ntracks.first.size() > maxNTracks ) continue;
                 ntracks.first.push_back(*s);
 	        Cluster aCl;
-                aCl.seedingTrack = *s;		
-                aCl.seedPoint = ntracks.second; 
-	        aCl.tracks = ntracks.first; 
-                clusters.push_back(aCl); 
+                aCl.seedingTrack = *s;
+                aCl.seedPoint = ntracks.second;
+	        aCl.tracks = ntracks.first;
+                clusters.push_back(aCl);
        }
-	 	
+
 return clusters;
 }
 
+std::vector<TracksClusteringFromDisplacedSeed::Cluster> TracksClusteringFromDisplacedSeed::clusters(
+	 const reco::Vertex &pv,
+	 const std::vector<reco::TransientTrack> & selectedTracks,
+	 const pat::MuonCollection & muons,
+   const pat::ElectronCollection & electrons
+ ){
+
+	 using namespace reco;
+	 std::vector<TransientTrack> seeds;
+
+	 for (auto& ttrack: selectedTracks){
+		 double tt_pt = ttrack.track().pt();
+		 double tt_eta = ttrack.track().eta();
+     std::pair<bool,Measurement1D> ip = IPTools::absoluteImpactParameter3D(ttrack,pv);
+     bool muon_match = false;
+     bool ele_match = false;
+
+     for(auto& electron: electrons){
+       for(edm::Ref<pat::PackedCandidateCollection> cand : electron.associatedPackedPFCandidates()){
+    		 if(!cand || !(cand->bestTrack()) ) continue;
+    		 double pseudoTrack_pt = cand->bestTrack()->pt();
+    		 double pseudoTrack_eta = cand->bestTrack()->eta();
+
+  		   float dpt = fabs(tt_pt - pseudoTrack_pt);
+  		   float deta = fabs(tt_eta - pseudoTrack_eta);
+
+  		 if(ip.first && ip.second.value() >= min3DIPValue && ip.second.significance() >= min3DIPSignificance &&
+  				ip.second.value() <= max3DIPValue && ip.second.significance() <= max3DIPSignificance &&
+  			  (dpt < 0.001 && deta < 0.001 && cand->charge()!=0) ){
+
+
+  	         #ifdef VTXDEBUG
+             std::cout << "--- Electron PF track pt: "<< pseudoTrack_pt << "  Electron PF track eta: "<< pseudoTrack_eta << std::endl;
+             std::cout << "---- Track pt: " << tt_pt  << " Track eta: " << tt_eta << std::endl;
+             std::cout << "new seed ref " << ttrack.trackBaseRef().key()  << " " << ip.second.value() << " " << ip.second.significance()
+             << " " << ttrack.track().hitPattern().trackerLayersWithMeasurement() << std::endl;
+             #endif
+             ele_match = true;
+           }
+         }
+       }
+
+       for(auto& muon: muons){
+
+         const pat::PackedCandidate* cand = dynamic_cast<const pat::PackedCandidate*>(muon.sourceCandidatePtr(0).get());
+         if(!cand || !(cand->bestTrack()) ) continue;
+         double pseudoTrack_pt = cand->bestTrack()->pt();
+         double pseudoTrack_eta = cand->bestTrack()->eta();
+
+         float dpt = fabs(tt_pt - pseudoTrack_pt);
+  		   float deta = fabs(tt_eta - pseudoTrack_eta);
+
+         if(ip.first && ip.second.value() >= min3DIPValue && ip.second.significance() >= min3DIPSignificance &&
+    				ip.second.value() <= max3DIPValue && ip.second.significance() <= max3DIPSignificance &&
+    			  (dpt < 0.001 && deta < 0.001) ){
+
+    	         #ifdef VTXDEBUG
+               std::cout << "--- Muon PF track pt: " << pseudoTrack_pt << "  Muon PF track eta: "<< pseudoTrack_eta << std::endl;
+               std::cout << "---- Track pt: " << tt_pt  << " Track eta: " << tt_eta << std::endl;
+               std::cout << "new seed ref " << it->trackBaseRef().key()  << " " << ip.second.value() << " " << ip.second.significance()
+               << " " << it->track().hitPattern().trackerLayersWithMeasurement() << std::endl;
+               #endif
+               muon_match = true;
+             }
+       }
+       if (ele_match || muon_match) seeds.push_back(ttrack);
+     }
+
+
+
+	 std::vector< Cluster > clusters;
+	 int i = 0;
+	 for(std::vector<TransientTrack>::const_iterator s = seeds.begin(); s != seeds.end(); ++s, ++i){
+		 #ifdef VTXDEBUG
+		 std::cout << "Seed N. "<<i <<   std::endl;
+		 #endif // VTXDEBUG
+		 std::pair<std::vector<reco::TransientTrack>,GlobalPoint>  ntracks = nearTracks(*s,selectedTracks,pv);
+		 //std::cout << ntracks.first.size() << " " << ntracks.first.size()  << std::endl;
+		 //if(ntracks.first.size() == 0 || ntracks.first.size() > maxNTracks ) continue;
+		 ntracks.first.push_back(*s);
+		 Cluster aCl;
+		 aCl.seedingTrack = *s;
+		 aCl.seedPoint = ntracks.second;
+		 aCl.tracks = ntracks.first;
+		 clusters.push_back(aCl);
+	 }
+	 return clusters;
+}

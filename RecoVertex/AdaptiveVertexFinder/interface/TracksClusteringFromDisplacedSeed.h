@@ -15,6 +15,9 @@
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
+#include "DataFormats/PatCandidates/interface/Muon.h"
+#include "DataFormats/PatCandidates/interface/Electron.h"
+#include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
 #include "TrackingTools/PatternTools/interface/TwoTrackMinimumDistance.h"
@@ -24,20 +27,27 @@
 
 class TracksClusteringFromDisplacedSeed {
     public:
-    struct Cluster 
-    {       
-      GlobalPoint seedPoint;      
+    struct Cluster
+    {
+      GlobalPoint seedPoint;
       reco::TransientTrack seedingTrack;
       std::vector<reco::TransientTrack> tracks;
     };
 	TracksClusteringFromDisplacedSeed(const edm::ParameterSet &params);
-	
-	
+
+
         std::vector<Cluster> clusters(
 	  const reco::Vertex    &pv,
 	  const std::vector<reco::TransientTrack> & selectedTracks
 	 );
-	 
+
+   std::vector<Cluster> clusters(
+   	 const reco::Vertex &pv,
+   	 const std::vector<reco::TransientTrack> & selectedTracks,
+   	 const pat::MuonCollection & muons,
+      const pat::ElectronCollection & electrons
+    );
+
 
     private:
 	bool trackFilter(const reco::TrackRef &track) const;
@@ -56,4 +66,3 @@ class TracksClusteringFromDisplacedSeed {
 
 
 };
-
